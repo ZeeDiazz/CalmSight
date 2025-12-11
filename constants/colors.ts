@@ -7,10 +7,10 @@ export const Colors = {
     secondary: {
         DEFAULT: '#6B7D85',
         dark:'#1F2A30',
-        light:'#2F3E46',
+        light:'#2F3E46'
     },
     background: {
         DEFAULT: '#F4F7F8',
-        dark: '#E6EEF1',
+        dark: '#E8EEF1',
     }
 }
