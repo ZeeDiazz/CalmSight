@@ -30,7 +30,7 @@ export default function Index() {
                 <Text className="text-sm text-secondary mb-1">
                     Wednesday, November 27
                 </Text>
-                <Text className="text-3xl font-bold text-secondary-dark">
+                <Text className="text-3xl font-black text-secondary-dark">
                     Today&#39;s Overview
                 </Text>
             </View>
