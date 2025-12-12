@@ -1,5 +1,6 @@
 import Card from "@/app/components/card";
 import {ScrollView, Text, View} from "react-native";
+import PatternAlertCard from "@/app/components/patternAlertCard";
 
 export default function Index() {
     const stressData = {
@@ -7,6 +8,12 @@ export default function Index() {
         level: 'Low Stress',
         description: 'Acute stress level, short term stress',
     };
+
+    const patternData = {
+        type: 'positive',
+        message: 'Your HRV has improved 12% this week. Your evening walks are helping recovery.',
+    };
+
     const stats = [
         { value: 'Mid', label: 'WORRY TIME', textColor: 'text-[#7B9BA8]'},
         { value: 'Low', label: 'THREAT MONITORING', textColor: 'text-[#D4A574]'},
@@ -49,7 +56,8 @@ export default function Index() {
                         </View>
                     </View>
                 </View>
-
+                {/*  */}
+                <PatternAlertCard type={patternData.type} message={patternData.message}/>
                 {/* Metrics Grid */}
                 <View className="gap-3 mb-6">
                     <View className="flex-row gap-3">
