@@ -1,6 +1,6 @@
-import Card from "@/app/components/card";
+import Card from "@/components/card";
 import {ScrollView, Text, View} from "react-native";
-import PatternAlertCard from "@/app/components/patternAlertCard";
+import PatternAlertCard from "@/components/patternAlertCard";
 
 export default function Index() {
     const stressData = {
