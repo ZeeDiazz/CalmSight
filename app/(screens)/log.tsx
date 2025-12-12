@@ -1,16 +1,18 @@
 import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
+import StageMood from "@/components/log-component/stageMood";
 
 export interface CheckInData {
     type: 'daily' | 'weekly';
+    mood: string | null;
 }
 
 const Log = () => {
-
     const [checkInType, setCheckInType] = useState<'daily' | 'weekly'>('daily');
 
     const [checkInData, setCheckInData] = useState<CheckInData>({
         type: 'daily',
+        mood: null
     });
 
     const updateStageData = (stageData: Partial<CheckInData>) => {
@@ -45,7 +47,9 @@ const Log = () => {
             </View>
 
             {/* Check-in stages*/}
-            <View></View>
+            <View>
+                <StageMood checkInType={checkInData.type} selected={checkInData.mood} onUpdate={(mood) => updateStageData({mood})}/>
+            </View>
 
             {/*Stage navigation buttons*/}
             <View className="flex-row justify-center gap-3">
