@@ -1,6 +1,12 @@
 import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import StageMood from "@/components/log-component/stageMood";
+import StageWorryTime from "@/components/log-component/stageWorryTime";
+import StageThreatMonitoring from "@/components/log-component/stageThreatMonitoring";
+import StageCoping from "@/components/log-component/stageCoping";
+import StageSymtoms from "@/components/log-component/stageSymtoms";
+import StageJobDemand from "@/components/log-component/stageJobDemand";
+import {useRouter} from "expo-router";
 
 export interface CheckInData {
     type: 'daily' | 'weekly';
@@ -8,6 +14,11 @@ export interface CheckInData {
 }
 
 const Log = () => {
+    const router = useRouter();
+
+    const totalStages = 6;
+    const [currentStage, setCurrentStage] = useState(1);
+
     const [checkInType, setCheckInType] = useState<'daily' | 'weekly'>('daily');
 
     const [checkInData, setCheckInData] = useState<CheckInData>({
@@ -17,6 +28,47 @@ const Log = () => {
 
     const updateStageData = (stageData: Partial<CheckInData>) => {
         setCheckInData(prev => ({ ...prev, ...stageData }));
+    };
+
+    const renderStage = () => {
+        switch (currentStage) {
+            case 1:
+                return (
+                <StageMood checkInType={checkInData.type} selected={checkInData.mood}
+                           onUpdate={(mood) => updateStageData({mood})}/>);
+            case 2:
+                return(<StageWorryTime/>);
+            case 3:
+                return(<StageThreatMonitoring/>);
+            case 4:
+                return(<StageJobDemand/>);
+            case 5:
+                return(<StageCoping/>);
+            case 6:
+                return(<StageSymtoms/>);
+            default:
+                return (
+                    <StageMood checkInType={checkInData.type} selected={checkInData.mood}
+                               onUpdate={(mood) => updateStageData({mood})}/>);
+        }
+    };
+
+    const handleSave = () => {
+        try {
+            //TODO: send to backend
+            console.log(checkInData);
+            setCurrentStage(1);
+            router.push('/(screens)');
+        }
+        catch (error) {
+            console.error('Error saving user-log:', error);
+        }
+    };
+
+    const handleNextStage= ()=> {
+        if (currentStage < totalStages){
+            setCurrentStage(prev=> prev + 1);
+        }
     };
 
     return (
@@ -48,7 +100,20 @@ const Log = () => {
 
             {/* Check-in stages*/}
             <View>
-                <StageMood checkInType={checkInData.type} selected={checkInData.mood} onUpdate={(mood) => updateStageData({mood})}/>
+                {renderStage()}
+            </View>
+
+            {/*Used to map the totalStages https://stackoverflow.com/questions/77705494/using-map-with-numbers-not-an-array-or-ignoring-the-first-parameter-in-a-map-a*/}
+            <View className="flex-row justify-center gap-3">
+                {[...Array(totalStages)].map((_, index) => (
+                    <View key={index} className={`w-3 h-3 rounded-full ${ index + 1 < currentStage ? 'bg-primary-dark'
+                            : (index + 1 === currentStage
+                                ? 'bg-primary'
+                                : 'bg-background-dark')
+                    }`}></View>
+                ))}
+
+
             </View>
 
             {/*Stage navigation buttons*/}
@@ -56,8 +121,10 @@ const Log = () => {
                 <TouchableOpacity className="bg-background-dark rounded-xl p-5 items-center justify-center border border-[#D9D9D9] min-h-[5%] min-w-[45%]">
                     <Text className="text-center text-secondary text-[15px]">Back</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className="bg-primary rounded-xl p-5 items-center justify-center border border-[#D9D9D9] min-h-[5%] min-w-[45%]">
-                    <Text className="text-center text-white text-[15px]">Next</Text>
+                <TouchableOpacity
+                    onPress={currentStage === totalStages ? handleSave : handleNextStage}
+                    className="bg-primary rounded-xl p-5 items-center justify-center border border-[#D9D9D9] min-h-[5%] min-w-[45%]">
+                    <Text className="text-center text-white text-[15px]">{currentStage === totalStages ? 'Save' : 'Next'}</Text>
                 </TouchableOpacity>
             </View>
         </View>
