@@ -71,6 +71,12 @@ const Log = () => {
         }
     };
 
+    const handlePrevStage = ()=> {
+        if (currentStage > 1){
+            setCurrentStage(prev=> prev - 1);
+        }
+    }
+
     return (
         <View className="flex-1 bg-background pt-12">
             <View className="mt-4 mb-5 px-4">
@@ -118,8 +124,13 @@ const Log = () => {
 
             {/*Stage navigation buttons*/}
             <View className="flex-row justify-center gap-3">
-                <TouchableOpacity className="bg-background-dark rounded-xl p-5 items-center justify-center border border-[#D9D9D9] min-h-[5%] min-w-[45%]">
-                    <Text className="text-center text-secondary text-[15px]">Back</Text>
+                <TouchableOpacity
+                    onPress={handlePrevStage}
+                    disabled={currentStage === 1}
+                    className={`rounded-xl p-5 items-center justify-center border border-[#D9D9D9] min-h-[5%] min-w-[45%]
+                        ${currentStage === 1 ? 'bg-background-dark/20' : 'bg-background-dark'}
+                    `}>
+                    <Text className={`text-center text-[15px] ${currentStage === 1 ? 'text-secondary' : 'text-secondary-dark'}`}>Back</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={currentStage === totalStages ? handleSave : handleNextStage}
