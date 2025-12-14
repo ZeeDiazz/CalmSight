@@ -13,9 +13,7 @@ const StageWorryTime = () => {
 
     return (
         <View >
-            <Text className="text-[18px] font-semibold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">
-                Time Spent Worrying
-            </Text>
+            <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">Time Spent Worrying</Text>
             {
                 options.map((option, index) => (
                     <TextCard key={index} title={option.title} subtext={option.subtext}></TextCard>
