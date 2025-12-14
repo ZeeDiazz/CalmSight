@@ -24,7 +24,7 @@ const StageMood = ({checkInType, selected, onUpdate}:MoodProp) => {
 
     return (
         <View>
-            <Text className="text-[18px] font-semibold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">
+            <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">
                 {checkInType === 'daily'?
                     'How are you feeling today?' : 'How did you feel this week?'}
             </Text>
