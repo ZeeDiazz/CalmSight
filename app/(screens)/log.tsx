@@ -86,7 +86,7 @@ const Log = () => {
             </View>
             {/* Top toggle between daily and weekly */}
             {currentStage ===1 ?
-                <View className="flex-row justify-center gap-3">
+                <View className="absolute top-[12%] left-0 right-0  flex-row justify-center gap-3">
                     <TouchableOpacity
                         onPress={() => {
                             setCheckInType('daily');
@@ -109,7 +109,8 @@ const Log = () => {
             }
 
             {/* Check-in stages*/}
-            <View>
+            <View className="h-[3%]" />
+            <View >
                 {renderStage()}
             </View>
 
