@@ -1,16 +1,17 @@
 import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useState} from 'react';
 import StageMood from "@/components/log-component/stageMood";
-import StageWorryTime from "@/components/log-component/stageWorryTime";
-import StageThreatMonitoring from "@/components/log-component/stageThreatMonitoring";
 import StageCoping from "@/components/log-component/stageCoping";
-import StageSymtoms from "@/components/log-component/stageSymtoms";
+import StageSymptoms from "@/components/log-component/stageSymptoms";
 import StageJobDemand from "@/components/log-component/stageJobDemand";
 import {useRouter} from "expo-router";
+import StageTimeQuestion from "@/components/log-component/stagesTimeQuestions";
 
 export interface CheckInData {
     type: 'daily' | 'weekly';
     mood: string | null;
+    worryTime: string | null;
+    threatMonitoring: string | null;
 }
 
 const Log = () => {
@@ -23,7 +24,9 @@ const Log = () => {
 
     const [checkInData, setCheckInData] = useState<CheckInData>({
         type: 'daily',
-        mood: null
+        mood: null,
+        worryTime: null,
+        threatMonitoring: null
     });
 
     const updateStageData = (stageData: Partial<CheckInData>) => {
@@ -34,18 +37,30 @@ const Log = () => {
         switch (currentStage) {
             case 1:
                 return (
-                <StageMood checkInType={checkInData.type} selected={checkInData.mood}
-                           onUpdate={(mood) => updateStageData({mood})}/>);
+                    <StageMood checkInType={checkInData.type}
+                        selected={checkInData.mood}
+                        onUpdate={(mood) => updateStageData({mood})}
+                    />
+                );
             case 2:
-                return(<StageWorryTime/>);
+                return(
+                    <StageTimeQuestion title="Time Spent Worrying"
+                    selected={checkInData.worryTime}
+                    onUpdate={(value) => updateStageData({ worryTime: value })}
+                />);
             case 3:
-                return(<StageThreatMonitoring/>);
+                return(
+                    <StageTimeQuestion title="Time Spent in Threat Monitoring"
+                    selected={checkInData.threatMonitoring}
+                    onUpdate={(value) => updateStageData({ threatMonitoring: value })}
+                    />
+                );
             case 4:
                 return(<StageJobDemand/>);
             case 5:
                 return(<StageCoping/>);
             case 6:
-                return(<StageSymtoms/>);
+                return(<StageSymptoms/>);
             default:
                 return (
                     <StageMood checkInType={checkInData.type} selected={checkInData.mood}
