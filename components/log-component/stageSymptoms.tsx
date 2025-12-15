@@ -1,6 +1,6 @@
 import {View} from "react-native";
 
-const StageSymtoms = () => {
+const StageSymptoms = () => {
 
     return (
         <View>
@@ -9,4 +9,4 @@ const StageSymtoms = () => {
     );
 };
 
-export default StageSymtoms;
+export default StageSymptoms;
