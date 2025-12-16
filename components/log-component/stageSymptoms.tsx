@@ -1,11 +1,4 @@
-import {
-    View,
-    Text,
-    TextInput,
-    ScrollView,
-    TouchableWithoutFeedback,
-    Keyboard,
-} from "react-native";
+import {View, Text, TextInput, ScrollView, TouchableWithoutFeedback, Keyboard} from "react-native";
 
 import {useEffect, useState} from "react";
 import TextCard from "@/components/log-component/textCard";
