@@ -12,6 +12,7 @@ export interface CheckInData {
     mood: string | null;
     worryTime: string | null;
     threatMonitoring: string | null;
+    jobDemand: Record<string, string> | null;
     coping: Record<string, string> | null;
 }
 
@@ -28,7 +29,8 @@ const Log = () => {
         mood: null,
         worryTime: null,
         threatMonitoring: null,
-        coping: null
+        jobDemand: null,
+        coping: null,
     });
 
     const updateStageData = (stageData: Partial<CheckInData>) => {
@@ -58,7 +60,12 @@ const Log = () => {
                     />
                 );
             case 4:
-                return(<StageJobDemand/>);
+                return(
+                    <StageJobDemand
+                        selected={checkInData.coping}
+                        onUpdate={(data) => updateStageData({ coping: data })}
+                    />
+                );
             case 5:
                 return(
                     <StageCoping
