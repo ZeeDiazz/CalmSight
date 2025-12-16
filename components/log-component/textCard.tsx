@@ -17,7 +17,7 @@ const TextCard = ({ title, subtext, isSelected = false, onPress }:TextCardProps)
                 : 'bg-background-dark border-[#D9D9D9]'}`}
         >
             <Text className={`text-[16px] font-semibold mb-[2%] 
-                ${ isSelected ? 'text-primary' : 'text-secondary'}`}
+                ${ isSelected ? 'text-primary' : 'text-secondary-dark'}`}
             >
                 {title}
             </Text>
