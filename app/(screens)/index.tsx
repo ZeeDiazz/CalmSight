@@ -1,8 +1,21 @@
 import Card from "@/components/card";
 import {ScrollView, Text, View} from "react-native";
 import PatternAlertCard from "@/components/patternAlertCard";
+import {Redirect} from "expo-router";
 
 export default function Index() {
+    // TODO: Check if user is logged in and has completed onboarding
+    const hasCompletedOnboarding = false;
+    const isLoggedIn = false;
+
+    if (!hasCompletedOnboarding) {
+        return <Redirect href="./(onboarding)/understandingStress" />;
+    }
+
+    if (!isLoggedIn) {
+        return <Redirect href="./(onboarding)/login" />;
+    }
+
     const stressData = {
         score: 64,
         level: 'Low Stress',
