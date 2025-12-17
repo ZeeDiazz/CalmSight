@@ -28,7 +28,7 @@ const AppMeasures = () => {
                 {/*SPACING*/}
                 <View className="h-[3%]"/>
 
-                <View className="flex-1 gap-y-[3%] mb-8">
+                <View className="flex-1 gap-y-[2%]">
                     {indicators.map((indicator, index) => (
                         <TextCard key={index} title={indicator.title} subtext={indicator.description}/>
                     ))}
