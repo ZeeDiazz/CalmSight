@@ -112,13 +112,13 @@ const Profile = () => {
                 <View className="h-2 bg-background-dark" />
 
                 {/* Theme Section */}
-                <View className="px-[3%]">
+                <View className="pt-3">
                     <Text className="text-base font-bold text-secondary-dark mb-4">
                         Theme
                     </Text>
 
                     <View className="flex-row gap-4">
-                        {/* Light Theme */}
+                        {/* TODO: Implement theme - if needed*/}
                         <TouchableOpacity
                             onPress={() => setSelectedTheme('light')}
                             className="flex-1"
@@ -126,12 +126,12 @@ const Profile = () => {
                             <View className={`rounded-xl overflow-hidden border-3 ${
                                 selectedTheme === 'light'
                                     ? 'border-primary'
-                                    : 'border-gray-200'
+                                    : 'border-[#D9D9D9]'
                             }`}>
                                 <View className="bg-white p-6 h-32 justify-center items-center">
                                     <View className="w-12 h-12 rounded-full bg-primary/20" />
-                                    <View className="w-16 h-2 bg-gray-200 mt-3 rounded" />
-                                    <View className="w-12 h-2 bg-gray-100 mt-2 rounded" />
+                                    <View className="w-16 h-2 bg-background-dark mt-3 rounded" />
+                                    <View className="w-12 h-2 bg-background-dark/45 mt-2 rounded" />
                                 </View>
                                 <View className="bg-gray-50 py-2">
                                     <Text className="text-xs text-center text-secondary-dark font-semibold">
@@ -141,7 +141,6 @@ const Profile = () => {
                             </View>
                         </TouchableOpacity>
 
-                        {/* Dark Theme */}
                         <TouchableOpacity
                             onPress={() => setSelectedTheme('dark')}
                             className="flex-1"
@@ -149,12 +148,12 @@ const Profile = () => {
                             <View className={`rounded-xl overflow-hidden border-3 ${
                                 selectedTheme === 'dark'
                                     ? 'border-primary'
-                                    : 'border-gray-200'
+                                    : 'border-[#D9D9D9]'
                             }`}>
                                 <View className="bg-[#1F2A30] p-6 h-32 justify-center items-center">
                                     <View className="w-12 h-12 rounded-full bg-primary/30" />
-                                    <View className="w-16 h-2 bg-gray-600 mt-3 rounded" />
-                                    <View className="w-12 h-2 bg-gray-700 mt-2 rounded" />
+                                    <View className="w-16 h-2 bg-secondary-light mt-3 rounded" />
+                                    <View className="w-12 h-2 bg-secondary-light/45 mt-2 rounded" />
                                 </View>
                                 <View className="bg-gray-800 py-2">
                                     <Text className="text-xs text-center text-white font-semibold">
