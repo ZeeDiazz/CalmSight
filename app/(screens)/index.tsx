@@ -5,8 +5,8 @@ import {Redirect} from "expo-router";
 
 export default function Index() {
     // TODO: Check if user is logged in and has completed onboarding
-    const hasCompletedOnboarding = false;
-    const isLoggedIn = false;
+    const hasCompletedOnboarding = true;
+    const isLoggedIn = true;
 
     if (!hasCompletedOnboarding) {
         return <Redirect href="./(onboarding)/understandingStress" />;

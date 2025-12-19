@@ -3,6 +3,7 @@ import React from "react";
 import WeeklyStressChart from "@/components/analysis/weeklyStressChart";
 import PredictionCard from "@/components/analysis/predictionCard";
 import BreakSuggestionCard from "@/components/analysis/breakSuggestionCard";
+import {StressComparisonCard, MostStressfulDayCard,  SleepImpactCard,  StressTriggersCard,  WeeklySummaryCard} from "@/components/analysis/trendCards";
 
 const Analysis = () => {
 
@@ -74,6 +75,15 @@ const Analysis = () => {
                         Trends
                     </Text>
 
+                    <WeeklySummaryCard />
+
+                    <StressComparisonCard />
+
+                    <MostStressfulDayCard />
+
+                    <SleepImpactCard />
+
+                    <StressTriggersCard />
                 </View>
             </ScrollView>
         </View>
