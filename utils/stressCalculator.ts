@@ -148,6 +148,8 @@ export class StressCalculator {
                 'avoidedSituations',
                 'avoidingThoughts',
                 'alcoholPills',
+                'soughtReassurance',
+                'controlledMyEmotions',
                 'monitorMySymptoms',
             ];
 
