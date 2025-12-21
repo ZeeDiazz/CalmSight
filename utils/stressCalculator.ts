@@ -36,7 +36,7 @@ export interface StressCalculation {
         components: {
             worryTime: number;
             threatMonitoring: number;
-            maladaptiveCoping: number;
+            harmfulCoping: number;
             worryEnergy: number;
         };
     };
@@ -125,7 +125,7 @@ export class StressCalculator {
         };
     }
 
-    private static calculateProblemB(data: CheckInData): { score: number; components: { worryTime: number; threatMonitoring: number; maladaptiveCoping: number; worryEnergy: number; }; } {
+    private static calculateProblemB(data: CheckInData): { score: number; components: { worryTime: number; threatMonitoring: number; harmfulCoping: number; worryEnergy: number; }; } {
         const worryTimeMap: Record<string, number> = {
             'minimal': 5,
             'moderate': 15,
@@ -195,7 +195,7 @@ export class StressCalculator {
             components: {
                 worryTime: worryTimeScore,
                 threatMonitoring: threatScore,
-                maladaptiveCoping: copingScore,
+                harmfulCoping: copingScore,
                 worryEnergy: worryEnergyScore,
             },
         };
