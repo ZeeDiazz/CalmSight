@@ -58,32 +58,67 @@ export class StressCalculator {
 
     static calculate(checkInData: CheckInData, healthData?: ObjectiveHealthData): StressCalculation {
 
+        const problemA = this.calculateProblemA(checkInData);
+
         return {
             confidence: 0,
-            dataQuality: undefined,
+            dataQuality: 'excellent',
             insights: [],
             objectiveBreakdown: {activityScore: 0, heartRateScore: 0, hrvScore: 0, sleepScore: 0},
             objectiveScore: 0,
-            problemA: {components: {jobDemands: 0, mood: 0, symptoms: 0}, score: 0, weight: 0},
-            problemB: {
-                components: {maladaptiveCoping: 0, threatMonitoring: 0, worryEnergy: 0, worryTime: 0},
-                score: 0,
-                weight: 0
+            problemA: {
+                score: Math.round(problemA.score),
+                weight: 0.3,
+                components: problemA.components,
             },
-            riskLevel: undefined,
+            problemB: {
+                score: 0,
+                weight: 0,
+                components: {maladaptiveCoping: 0, threatMonitoring: 0, worryEnergy: 0, worryTime: 0}
+            },
+            riskLevel: 'Low',
             stressScore: 0,
             subjectiveScore: 0
         };
     }
 
-    private static calculateProblemA(data: CheckInData): {score: number; components: {mood: number; jobDemands: number; symptoms: number; };} {
+    private static calculateProblemA(data: CheckInData): {score: number; components: {mood: number; jobDemands: number; symptoms: number;};} {
+        const moodMap: Record<string, number> = {
+            'overwhelmed': 35,
+            'drained': 25,
+            'neutral': 15,
+            'energized': 5,
+        };
+        const moodScore = moodMap[data.mood || 'neutral'] || 15;
+
+
+        let jobDemandsScore = 0;
+        if (data.jobDemand) {
+            const demandMap: Record<string, number> = {
+                'Lowest': 0, 'Low': 5, 'Moderate': 10, 'High': 15, 'Highest': 20,
+            };
+            jobDemandsScore += demandMap[data.jobDemand['workloadToday']] || 0;
+            const control = demandMap[data.jobDemand['controlOverTasks']] || 10;
+            jobDemandsScore += (20 - control);
+            const support = demandMap[data.jobDemand['socialSupport']] || 10;
+            jobDemandsScore += (20 - support);
+        }
+        jobDemandsScore = Math.min(35, jobDemandsScore);
+
+        let symptomsScore = 0;
+        if (data.symptoms?.symptoms) {
+            symptomsScore = Math.min(30, data.symptoms.symptoms.length * 5);
+        }
+
+        // Total Problem A
+        const totalScore = moodScore + jobDemandsScore + symptomsScore;
 
         return {
-            score: 0,
+            score: Math.min(100, totalScore),
             components: {
-                mood: 0,
-                jobDemands: 0,
-                symptoms: 0,
+                mood: moodScore,
+                jobDemands: jobDemandsScore,
+                symptoms: symptomsScore,
             },
         };
     }
