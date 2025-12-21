@@ -60,6 +60,8 @@ export class StressCalculator {
 
         const problemA = this.calculateProblemA(checkInData);
 
+        const problemB = this.calculateProblemB(checkInData);
+
         return {
             confidence: 0,
             dataQuality: 'excellent',
@@ -72,9 +74,9 @@ export class StressCalculator {
                 components: problemA.components,
             },
             problemB: {
-                score: 0,
-                weight: 0,
-                components: {maladaptiveCoping: 0, threatMonitoring: 0, worryEnergy: 0, worryTime: 0}
+                score: Math.round(problemB.score),
+                weight: 0.7, // 70% of subjective ⭐
+                components: problemB.components,
             },
             riskLevel: 'Low',
             stressScore: 0,
@@ -123,23 +125,76 @@ export class StressCalculator {
         };
     }
 
-    private static calculateProblemB(data: CheckInData): {
-        score: number;
-        components: {
-            worryTime: number;
-            threatMonitoring: number;
-            maladaptiveCoping: number;
-            worryEnergy: number;
+    private static calculateProblemB(data: CheckInData): { score: number; components: { worryTime: number; threatMonitoring: number; maladaptiveCoping: number; worryEnergy: number; }; } {
+        const worryTimeMap: Record<string, number> = {
+            'minimal': 5,
+            'moderate': 15,
+            'significant': 25,
+            'overwhelming': 30,
         };
-    } {
+        const worryTimeScore = worryTimeMap[data.worryTime || 'minimal'] || 5;
+
+        const threatMap: Record<string, number> = {
+            'minimal': 5,
+            'moderate': 15,
+            'significant': 25,
+            'overwhelming': 30,
+        };
+        const threatScore = threatMap[data.threatMonitoring || 'minimal'] || 5;
+
+        let copingScore = 0;
+        if (data.coping) {
+            const maladaptiveCoping = [
+                'avoidedSituations',
+                'avoidingThoughts',
+                'alcoholPills',
+                'monitorMySymptoms',
+            ];
+
+            const frequencyMap: Record<string, number> = {
+                'Never': 0,
+                'Rarely': 2,
+                'Moderate': 5,
+                'Often': 7,
+                'Always': 10,
+            };
+
+            maladaptiveCoping.forEach(strategy => {
+                const frequency = data.coping?.[strategy];
+                if (frequency) {
+                    copingScore += frequencyMap[frequency] || 0;
+                }
+            });
+        }
+        copingScore = Math.min(30, copingScore);
+
+        const worryIntensity: Record<string, number> = {
+            'minimal': 1,
+            'moderate': 3,
+            'significant': 5,
+            'overwhelming': 7,
+        };
+        const intensity = worryIntensity[data.worryTime || 'minimal'] || 1;
+
+        const timeDuration: Record<string, number> = {
+            'minimal': 1,
+            'moderate': 2,
+            'significant': 3,
+            'overwhelming': 4,
+        };
+        const duration = timeDuration[data.worryTime || 'minimal'] || 1;
+
+        const worryEnergyScore = Math.min(10, intensity + duration);
+
+        const totalScore = worryTimeScore + threatScore + copingScore + worryEnergyScore;
 
         return {
-            score: 0,
+            score: Math.min(100, totalScore),
             components: {
-                worryTime: 0,
-                threatMonitoring: 0,
-                maladaptiveCoping: 0,
-                worryEnergy: 0,
+                worryTime: worryTimeScore,
+                threatMonitoring: threatScore,
+                maladaptiveCoping: copingScore,
+                worryEnergy: worryEnergyScore,
             },
         };
     }
