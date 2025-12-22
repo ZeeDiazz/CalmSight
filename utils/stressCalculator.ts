@@ -1,58 +1,6 @@
-export interface CheckInData {
-    type: 'daily' | 'weekly';
-    mood: string | null;
-    worryTime: string | null;
-    threatMonitoring: string | null;
-    jobDemand: Record<string, string> | null;
-    coping: Record<string, string> | null;
-    symptoms: { symptoms: string[]; notes: string;} | null;
-}
+import {CheckInData, ObjectiveHealthData} from '@/interfaces/DataTypes'
+import {objectiveProps, problemAProp, problemBProp, StressCalculation} from "@/interfaces/StressTypesProps";
 
-export interface ObjectiveHealthData {
-    hrv?: { value: number; timestamp: string };
-    sleep?: { duration: number; quality: number; deepSleep: number; timestamp: string };
-    heartRate?: { resting: number; average: number; timestamp: string };
-    activity?: { steps: number; activeMinutes: number; calories: number; timestamp: string };
-    source: 'google_fit' | 'apple_health' | 'mock';
-}
-
-export interface StressCalculation {
-    stressScore: number;
-    subjectiveScore: number;
-    objectiveScore: number;
-
-    problemA: {
-        score: number;
-        weight: number;
-        components: {
-            mood: number;
-            jobDemands: number;
-            symptoms: number;
-        };
-    };
-    problemB: {
-        score: number;
-        weight: number;
-        components: {
-            worryTime: number;
-            threatMonitoring: number;
-            harmfulCoping: number;
-            worryEnergy: number;
-        };
-    };
-
-    objectiveBreakdown: {
-        hrvScore: number;
-        sleepScore: number;
-        heartRateScore: number;
-        activityScore: number;
-    };
-
-    riskLevel: 'Low' | 'Moderate' | 'High';
-    confidence: number;
-    dataQuality: 'excellent' | 'good' | 'fair' | 'poor';
-    insights: string[];
-}
 
 export class StressCalculator {
 
@@ -112,7 +60,7 @@ export class StressCalculator {
         };
     }
 
-    private static calculateProblemA(data: CheckInData): {score: number; components: {mood: number; jobDemands: number; symptoms: number;};} {
+    private static calculateProblemA(data: CheckInData): problemAProp {
         const moodMap: Record<string, number> = {
             'overwhelmed': 35,
             'drained': 25,
@@ -153,7 +101,7 @@ export class StressCalculator {
         };
     }
 
-    private static calculateProblemB(data: CheckInData): { score: number; components: { worryTime: number; threatMonitoring: number; harmfulCoping: number; worryEnergy: number; }; } {
+    private static calculateProblemB(data: CheckInData): problemBProp {
         const worryTimeMap: Record<string, number> = {
             'minimal': 5,
             'moderate': 15,
@@ -229,15 +177,7 @@ export class StressCalculator {
         };
     }
 
-    private static calculateObjectiveScore(data: ObjectiveHealthData): {
-        score: number;
-        breakdown: {
-            hrvScore: number;
-            sleepScore: number;
-            heartRateScore: number;
-            activityScore: number;
-        };
-    } {
+    private static calculateObjectiveScore(data: ObjectiveHealthData): objectiveProps{
         const hrvScore = this.calculateHRVScore(data.hrv);
         const sleepScore = this.calculateSleepScore(data.sleep);
         const heartRateScore = this.calculateHeartRateScore(data.heartRate);
@@ -334,5 +274,19 @@ export class StressCalculator {
         if (score >= 70) return 'High';
         if (score >= 40) return 'Moderate';
         return 'Low';
+    }
+
+    private static generateMCTInsights(
+        checkIn: CheckInData,
+        health: ObjectiveHealthData | undefined,
+        problemA: problemAProp,
+        problemB: problemBProp,
+        objective: objectiveProps
+    ): string[] {
+        const insights: string[] = [];
+
+
+
+        return [];
     }
 }
