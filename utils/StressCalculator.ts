@@ -1,10 +1,10 @@
-import {CheckInData, ObjectiveHealthData} from '@/interfaces/DataTypes'
+import {CheckInData, HealthData} from '@/interfaces/Types'
 import {objectiveProps, problemAProp, problemBProp, StressCalculation} from "@/interfaces/StressTypesProps";
 
 
 export class StressCalculator {
 
-    static calculate(checkInData: CheckInData, healthData?: ObjectiveHealthData): StressCalculation {
+    static calculate(checkInData: CheckInData, healthData?: HealthData): StressCalculation {
 
         const problemA = this.calculateProblemA(checkInData);
         const problemB = this.calculateProblemB(checkInData);
@@ -182,7 +182,7 @@ export class StressCalculator {
         };
     }
 
-    private static calculateObjectiveScore(data: ObjectiveHealthData): objectiveProps{
+    private static calculateObjectiveScore(data: HealthData): objectiveProps{
         const hrvScore = this.calculateHRVScore(data.hrv);
         const sleepScore = this.calculateSleepScore(data.sleep);
         const heartRateScore = this.calculateHeartRateScore(data.heartRate);
@@ -208,55 +208,55 @@ export class StressCalculator {
         };
     }
 
-    private static calculateHRVScore(hrv?: ObjectiveHealthData['hrv']): number {
+    private static calculateHRVScore(hrv?: HealthData['hrv']): number {
         if (!hrv) return 50;
-        if (hrv.value >= 80) return 10;
-        if (hrv.value >= 60) return 25;
-        if (hrv.value >= 40) return 50;
-        if (hrv.value >= 20) return 75;
+        if (hrv.interval >= 80) return 10;
+        if (hrv.interval >= 60) return 25;
+        if (hrv.interval >= 40) return 50;
+        if (hrv.interval >= 20) return 75;
         return 90;
     }
 
-    private static calculateSleepScore(sleep?: ObjectiveHealthData['sleep']): number {
+    private static calculateSleepScore(sleep?: HealthData['sleep']): number {
         if (!sleep) return 50;
         let score = 0;
 
-        if (sleep.duration < 5) score += 40;
-        else if (sleep.duration < 6) score += 30;
-        else if (sleep.duration < 7) score += 20;
-        else if (sleep.duration <= 9) score += 5;
+        if (sleep.totalDurationHours < 5) score += 40;
+        else if (sleep.totalDurationHours < 6) score += 30;
+        else if (sleep.totalDurationHours < 7) score += 20;
+        else if (sleep.totalDurationHours <= 9) score += 5;
         else score += 15;
 
-        const qualityStress = 100 - sleep.quality;
+        const qualityStress = 100 - sleep.sleepEfficiency;
         score += qualityStress * 0.3;
 
-        if (sleep.deepSleep < 30) score += 30;
-        else if (sleep.deepSleep < 60) score += 20;
-        else if (sleep.deepSleep < 90) score += 10;
+        if (sleep.deepSleepMinutes < 30) score += 30;
+        else if (sleep.deepSleepMinutes < 60) score += 20;
+        else if (sleep.deepSleepMinutes < 90) score += 10;
         else score += 0;
 
         return Math.min(100, score);
     }
 
-    private static calculateHeartRateScore(hr?: ObjectiveHealthData['heartRate']): number {
+    private static calculateHeartRateScore(hr?: HealthData['heartRate']): number {
         if (!hr) return 50;
         let score = 0;
 
-        if (hr.resting < 60) score += 5;
-        else if (hr.resting < 70) score += 15;
-        else if (hr.resting < 80) score += 35;
-        else if (hr.resting < 90) score += 50;
+        if (hr.restingBpm < 60) score += 5;
+        else if (hr.restingBpm < 70) score += 15;
+        else if (hr.restingBpm < 80) score += 35;
+        else if (hr.restingBpm < 90) score += 50;
         else score += 60;
 
-        if (hr.average < 70) score += 5;
-        else if (hr.average < 80) score += 15;
-        else if (hr.average < 90) score += 25;
+        if (hr.averageBpm < 70) score += 5;
+        else if (hr.averageBpm < 80) score += 15;
+        else if (hr.averageBpm < 90) score += 25;
         else score += 40;
 
         return Math.min(100, score);
     }
 
-    private static calculateActivityScore(activity?: ObjectiveHealthData['activity']): number {
+    private static calculateActivityScore(activity?: HealthData['activity']): number {
         if (!activity) return 50;
         let score = 0;
 
@@ -282,7 +282,7 @@ export class StressCalculator {
     }
 
     private static generateMCTInsights(
-        health: ObjectiveHealthData | undefined,
+        health: HealthData | undefined,
         problemA: problemAProp,
         problemB: problemBProp,
         objective: objectiveProps
