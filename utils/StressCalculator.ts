@@ -33,6 +33,11 @@ export class StressCalculator {
 
         const riskLevel = this.determineRiskLevel(finalScore);
 
+        let insights= [''];
+        if(objectiveResult !== null ){
+         insights = this.generateMCTInsights(healthData, problemA, problemB, objectiveResult);
+        }
+
         return {
             stressScore: Math.round(finalScore),
             subjectiveScore: Math.round(subjectiveScore),
@@ -56,7 +61,7 @@ export class StressCalculator {
             riskLevel: riskLevel,
             confidence: confidence,
             dataQuality: dataQuality,
-            insights: [''],
+            insights: insights,
         };
     }
 
@@ -277,7 +282,6 @@ export class StressCalculator {
     }
 
     private static generateMCTInsights(
-        checkIn: CheckInData,
         health: ObjectiveHealthData | undefined,
         problemA: problemAProp,
         problemB: problemBProp,
@@ -285,8 +289,55 @@ export class StressCalculator {
     ): string[] {
         const insights: string[] = [];
 
+        if (health) {
+            insights.push('Using subjective (MCT A/B) + objective (health) data');
+        } else {
+            insights.push('Connect health tracking to get personalized insights');
+        }
 
+        if (problemB.score > 60) {
+            insights.push('High metacognitive activity detected. Focus on how you\'re thinking about your worries, not just the worries themselves');
+        }
+        if (problemB.components.worryTime > 20) {
+            insights.push('You\'re spending significant time worrying. Try limiting worry sessions to 15-30 minutes per day with scheduled "worry time"');
+        }
+        if (problemB.components.threatMonitoring > 20) {
+            insights.push('High threat monitoring. Practice acknowledging thoughts without getting pulled into them');
+        }
+        if (problemB.components.harmfulCoping > 20) {
+            insights.push('Harmful coping detected - focus on changing responses rather than avoiding stressors');
+        }
 
-        return [];
+        if (problemA.components.jobDemands > 25) {
+            insights.push('Work demands are notably high. Consider discussing workload distribution or priorities with your manager');
+        }
+        if (problemA.components.symptoms > 20) {
+            insights.push('Multiple physical symptoms. If these persist, consulting with a healthcare provider is recommended');
+        }
+
+        if (problemB.score > problemA.score + 20) {
+            insights.push('Your reaction to stress appears more intense than the stressors themselves.');
+        } else if (problemA.score > problemB.score + 20) {
+            insights.push('External pressures are high, but good metacognitive control');
+        }
+
+        if (objective?.breakdown.hrvScore > 60) {
+            insights.push('Your heart rate variability suggests elevated stress levels. Your body is in stress mode, even if mind feels okay');
+        }
+        if (objective?.breakdown.sleepScore > 50) {
+            insights.push('Sleep quality is affected, which impacts both mood and worry patterns. Improving sleep could help break this cycle');
+        }
+        if (health && objective?.breakdown.sleepScore > 50 && problemB.components.worryTime > 20) {
+            insights.push('Poor sleep and excessive worrying are reinforcing each other. Prioritizing sleep hygiene could reduce worry time');
+        }
+
+        if (problemA.score < 40 && problemB.score > 60) {
+            insights.push('The stressors you face are manageable, work on reducing metacognitive responses');
+        }
+        if (problemB.score < 30) {
+            insights.push('You\'re managing worry and stress thoughts effectively. Keep up these healthy mental habits');
+        }
+
+        return insights;
     }
 }
