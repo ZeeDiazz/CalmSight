@@ -59,15 +59,36 @@ export class StressCalculator {
     static calculate(checkInData: CheckInData, healthData?: ObjectiveHealthData): StressCalculation {
 
         const problemA = this.calculateProblemA(checkInData);
-
         const problemB = this.calculateProblemB(checkInData);
 
+        // Weighted subjective score (Problem A = 30% & Problem B = 70%)
+        const subjectiveScore = (problemB.score * 0.7) + (problemA.score * 0.3);
+
+        const objectiveResult = healthData ? this.calculateObjectiveScore(healthData) : null;
+
+        const hasObjective = objectiveResult !== null;
+
+        let finalScore: number;
+        let confidence: number;
+        let dataQuality: 'excellent' | 'good' | 'fair' | 'poor';
+
+        if (hasObjective) {
+            // Both Objective and subjective are weighted 50-50%
+            finalScore = (subjectiveScore * 0.5) + (objectiveResult.score * 0.5);
+            confidence = 95;
+            dataQuality = 'excellent';
+        } else {
+            finalScore = subjectiveScore;
+            confidence = 70;
+            dataQuality = 'good';
+        }
+
+        const riskLevel = this.determineRiskLevel(finalScore);
+
         return {
-            confidence: 0,
-            dataQuality: 'excellent',
-            insights: [],
-            objectiveBreakdown: {activityScore: 0, heartRateScore: 0, hrvScore: 0, sleepScore: 0},
-            objectiveScore: 0,
+            stressScore: Math.round(finalScore),
+            subjectiveScore: Math.round(subjectiveScore),
+            objectiveScore: Math.round(objectiveResult?.score || 0),
             problemA: {
                 score: Math.round(problemA.score),
                 weight: 0.3,
@@ -75,12 +96,19 @@ export class StressCalculator {
             },
             problemB: {
                 score: Math.round(problemB.score),
-                weight: 0.7, // 70% of subjective ⭐
+                weight: 0.7,
                 components: problemB.components,
             },
-            riskLevel: 'Low',
-            stressScore: 0,
-            subjectiveScore: 0
+            objectiveBreakdown: objectiveResult?.breakdown || {
+                hrvScore: 0,
+                sleepScore: 0,
+                heartRateScore: 0,
+                activityScore: 0,
+            },
+            riskLevel: riskLevel,
+            confidence: confidence,
+            dataQuality: dataQuality,
+            insights: [''],
         };
     }
 
