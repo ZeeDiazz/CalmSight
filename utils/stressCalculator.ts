@@ -201,6 +201,107 @@ export class StressCalculator {
         };
     }
 
+    private static calculateObjectiveScore(data: ObjectiveHealthData): {
+        score: number;
+        breakdown: {
+            hrvScore: number;
+            sleepScore: number;
+            heartRateScore: number;
+            activityScore: number;
+        };
+    } {
+        const hrvScore = this.calculateHRVScore(data.hrv);
+        const sleepScore = this.calculateSleepScore(data.sleep);
+        const heartRateScore = this.calculateHeartRateScore(data.heartRate);
+        const activityScore = this.calculateActivityScore(data.activity);
+
+        const weights = {hrv: 0.35, sleep: 0.35, heartRate: 0.20, activity: 0.10,};
+
+        const score = (
+            hrvScore * weights.hrv +
+            sleepScore * weights.sleep +
+            heartRateScore * weights.heartRate +
+            activityScore * weights.activity
+        );
+
+        return {
+            score: Math.min(100, score),
+            breakdown: {
+                hrvScore,
+                sleepScore,
+                heartRateScore,
+                activityScore,
+            },
+        };
+    }
+
+    private static calculateHRVScore(hrv?: ObjectiveHealthData['hrv']): number {
+        if (!hrv) return 50;
+        if (hrv.value >= 80) return 10;
+        if (hrv.value >= 60) return 25;
+        if (hrv.value >= 40) return 50;
+        if (hrv.value >= 20) return 75;
+        return 90;
+    }
+
+    private static calculateSleepScore(sleep?: ObjectiveHealthData['sleep']): number {
+        if (!sleep) return 50;
+        let score = 0;
+
+        if (sleep.duration < 5) score += 40;
+        else if (sleep.duration < 6) score += 30;
+        else if (sleep.duration < 7) score += 20;
+        else if (sleep.duration <= 9) score += 5;
+        else score += 15;
+
+        const qualityStress = 100 - sleep.quality;
+        score += qualityStress * 0.3;
+
+        if (sleep.deepSleep < 30) score += 30;
+        else if (sleep.deepSleep < 60) score += 20;
+        else if (sleep.deepSleep < 90) score += 10;
+        else score += 0;
+
+        return Math.min(100, score);
+    }
+
+    private static calculateHeartRateScore(hr?: ObjectiveHealthData['heartRate']): number {
+        if (!hr) return 50;
+        let score = 0;
+
+        if (hr.resting < 60) score += 5;
+        else if (hr.resting < 70) score += 15;
+        else if (hr.resting < 80) score += 35;
+        else if (hr.resting < 90) score += 50;
+        else score += 60;
+
+        if (hr.average < 70) score += 5;
+        else if (hr.average < 80) score += 15;
+        else if (hr.average < 90) score += 25;
+        else score += 40;
+
+        return Math.min(100, score);
+    }
+
+    private static calculateActivityScore(activity?: ObjectiveHealthData['activity']): number {
+        if (!activity) return 50;
+        let score = 0;
+
+        if (activity.steps < 2000) score += 30;
+        else if (activity.steps < 5000) score += 15;
+        else if (activity.steps <= 12000) score += 0;
+        else if (activity.steps <= 20000) score += 10;
+        else score += 20;
+
+        if (activity.activeMinutes < 10) score += 30;
+        else if (activity.activeMinutes < 30) score += 15;
+        else if (activity.activeMinutes <= 90) score += 0;
+        else if (activity.activeMinutes <= 150) score += 10;
+        else score += 20;
+
+        return Math.min(100, score);
+    }
+
     private static determineRiskLevel(score: number): 'Low' | 'Moderate' | 'High' {
         if (score >= 70) return 'High';
         if (score >= 40) return 'Moderate';
