@@ -1,5 +1,9 @@
 import {StressCalculator} from '@/utils/StressCalculator';
-import {CheckInData, ObjectiveHealthData} from '@/interfaces/DataTypes';
+import {CheckInData, HealthData, HealthDataSource} from '@/interfaces/Types';
+
+const mockSource: HealthDataSource = 'mock';
+const now = new Date().toISOString();
+const today = new Date().toISOString().split('T')[0];
 
 const mockEmptyCheckIn = (): CheckInData => ({
     type: 'daily',
@@ -10,7 +14,6 @@ const mockEmptyCheckIn = (): CheckInData => ({
     coping: null,
     symptoms: null,
 });
-
 const mockLowStressCheckIn = (): CheckInData => ({
     type: 'daily',
     mood: 'energized',
@@ -29,7 +32,24 @@ const mockLowStressCheckIn = (): CheckInData => ({
     },
     symptoms: {symptoms: [], notes: ''},
 });
-
+const mockModerateStressCheckIn = (): CheckInData => ({
+    type: 'daily',
+    mood: 'neutral',
+    worryTime: 'moderate',
+    threatMonitoring: 'moderate',
+    jobDemand: {
+        workloadToday: 'Moderate',
+        controlOverTasks: 'Moderate',
+        socialSupport: 'Moderate',
+    },
+    coping: {
+        avoidedSituations: 'Rarely',
+        avoidingThoughts: 'Moderate',
+        alcoholPills: 'Never',
+        monitorMySymptoms: 'Rarely',
+    },
+    symptoms: {symptoms: ['fatigue'], notes: ''},
+});
 const mockHighStressCheckIn = (): CheckInData => ({
     type: 'daily',
     mood: 'overwhelmed',
@@ -52,47 +72,119 @@ const mockHighStressCheckIn = (): CheckInData => ({
     },
 });
 
-const mockModerateStressCheckIn = (): CheckInData => ({
-    type: 'daily',
-    mood: 'neutral',
-    worryTime: 'moderate',
-    threatMonitoring: 'moderate',
-    jobDemand: {
-        workloadToday: 'Moderate',
-        controlOverTasks: 'Moderate',
-        socialSupport: 'Moderate',
+const mockLowStressHealthData = (): HealthData => ({
+    date: today,
+    hrv: { interval: 85, shortTermHrv: 72, timestamp: now, source: mockSource },
+    sleep: {
+        startTime: now,
+        endTime: now,
+        stages: [],
+        totalDurationHours: 8,
+        timeAsleepHours: 7.5,
+        timeAwakeMinutes: 30,
+        deepSleepMinutes: 100,
+        lightSleepMinutes: 200,
+        remSleepMinutes: 110,
+        sleepEfficiency: 90,
+        source: mockSource,
     },
-    coping: {
-        avoidedSituations: 'Rarely',
-        avoidingThoughts: 'Moderate',
-        alcoholPills: 'Never',
-        monitorMySymptoms: 'Rarely',
+    heartRate: {
+        restingBpm: 58,
+        averageBpm: 65,
+        minBpm: 52,
+        maxBpm: 120,
+        startTime: now,
+        endTime: now,
+        source: mockSource,
     },
-    symptoms: {symptoms: ['fatigue'], notes: ''},
+    activity: {
+        steps: 10000,
+        activeMinutes: 60,
+        activeCalories: 400,
+        basalCalories: 1800,
+        totalCalories: 2200,
+        date: today,
+        source: mockSource,
+    },
+    sources: [{ type: mockSource, name: 'Mock' }],
+    lastUpdated: now,
+    dataCompleteness: 'complete',
 });
-
-const mockLowStressHealthData = (): ObjectiveHealthData => ({
-    hrv: {value: 85, timestamp: new Date().toISOString()},
-    sleep: {duration: 8, quality: 90, deepSleep: 100, timestamp: new Date().toISOString()},
-    heartRate: {resting: 58, average: 65, timestamp: new Date().toISOString()},
-    activity: {steps: 10000, activeMinutes: 60, calories: 2500, timestamp: new Date().toISOString()},
-    source: 'mock',
+const mockModerateStressHealthData = (): HealthData => ({
+    date: today,
+    hrv: { interval: 50, shortTermHrv: 42, timestamp: now, source: mockSource },
+    sleep: {
+        startTime: now,
+        endTime: now,
+        stages: [],
+        totalDurationHours: 6.5,
+        timeAsleepHours: 5.5,
+        timeAwakeMinutes: 60,
+        deepSleepMinutes: 55,
+        lightSleepMinutes: 180,
+        remSleepMinutes: 75,
+        sleepEfficiency: 70,
+        source: mockSource,
+    },
+    heartRate: {
+        restingBpm: 72,
+        averageBpm: 78,
+        minBpm: 62,
+        maxBpm: 140,
+        startTime: now,
+        endTime: now,
+        source: mockSource,
+    },
+    activity: {
+        steps: 6000,
+        activeMinutes: 35,
+        activeCalories: 250,
+        basalCalories: 1750,
+        totalCalories: 2000,
+        date: today,
+        source: mockSource,
+    },
+    sources: [{ type: mockSource, name: 'Mock' }],
+    lastUpdated: now,
+    dataCompleteness: 'complete',
 });
-
-const mockHighStressHealthData = (): ObjectiveHealthData => ({
-    hrv: {value: 18, timestamp: new Date().toISOString()},
-    sleep: {duration: 4.5, quality: 50, deepSleep: 20, timestamp: new Date().toISOString()},
-    heartRate: {resting: 95, average: 100, timestamp: new Date().toISOString()},
-    activity: {steps: 1500, activeMinutes: 5, calories: 1800, timestamp: new Date().toISOString()},
-    source: 'mock',
-});
-
-const mockModerateStressHealthData = (): ObjectiveHealthData => ({
-    hrv: {value: 50, timestamp: new Date().toISOString()},
-    sleep: {duration: 6.5, quality: 70, deepSleep: 55, timestamp: new Date().toISOString()},
-    heartRate: {resting: 72, average: 78, timestamp: new Date().toISOString()},
-    activity: {steps: 6000, activeMinutes: 35, calories: 2200, timestamp: new Date().toISOString()},
-    source: 'mock',
+const mockHighStressHealthData = (): HealthData => ({
+    date: today,
+    hrv: { interval: 18, shortTermHrv: 15, timestamp: now, source: mockSource },
+    sleep: {
+        startTime: now,
+        endTime: now,
+        stages: [],
+        totalDurationHours: 4.5,
+        timeAsleepHours: 3.5,
+        timeAwakeMinutes: 60,
+        deepSleepMinutes: 20,
+        lightSleepMinutes: 120,
+        remSleepMinutes: 40,
+        sleepEfficiency: 50,
+        source: mockSource,
+    },
+    heartRate: {
+        restingBpm: 95,
+        averageBpm: 100,
+        minBpm: 80,
+        maxBpm: 160,
+        startTime: now,
+        endTime: now,
+        source: mockSource,
+    },
+    activity: {
+        steps: 1500,
+        activeMinutes: 5,
+        activeCalories: 100,
+        basalCalories: 1700,
+        totalCalories: 1800,
+        date: today,
+        source: mockSource,
+    },
+    sources: [{ type: mockSource, name: 'Mock' }],
+    lastUpdated: now,
+    dataCompleteness: 'complete',
 });
 
 describe('StressCalculator', () => {
@@ -279,18 +371,10 @@ describe('StressCalculator', () => {
             expect(result.objectiveScore).toBe(0);
         });
 
-        it('Calculates HRV score correctly', () => {
-            //Low Stress
-            const highHRV: ObjectiveHealthData = {
-                hrv: { value: 85, timestamp: new Date().toISOString() },
-                source: 'mock',
-            };
+        it('Should calculate HRV score correctly', () => {
+            const highHRV: HealthData = {...mockLowStressHealthData(), hrv: { interval: 85, timestamp: now, source: mockSource },};
 
-            //High Stress
-            const lowHRV: ObjectiveHealthData = {
-                hrv: { value: 15, timestamp: new Date().toISOString() },
-                source: 'mock',
-            };
+            const lowHRV: HealthData = {...mockLowStressHealthData(), hrv: { interval: 15, timestamp: now, source: mockSource },};
 
             const highResult = StressCalculator.calculate(mockEmptyCheckIn(), highHRV);
             const lowResult = StressCalculator.calculate(mockEmptyCheckIn(), lowHRV);
@@ -299,14 +383,24 @@ describe('StressCalculator', () => {
         });
 
         it('Calculates sleep score based on duration, quality, and deep sleep', () => {
-            const goodSleep: ObjectiveHealthData = {
-                sleep: { duration: 8, quality: 90, deepSleep: 100, timestamp: new Date().toISOString() },
-                source: 'mock',
+            const goodSleep: HealthData = {
+                ...mockLowStressHealthData(),
+                sleep: {
+                    ...mockLowStressHealthData().sleep!,
+                    totalDurationHours: 8,
+                    sleepEfficiency: 90,
+                    deepSleepMinutes: 100,
+                },
             };
 
-            const poorSleep: ObjectiveHealthData = {
-                sleep: { duration: 4, quality: 40, deepSleep: 15, timestamp: new Date().toISOString() },
-                source: 'mock',
+            const poorSleep: HealthData = {
+                ...mockLowStressHealthData(),
+                sleep: {
+                    ...mockLowStressHealthData().sleep!,
+                    totalDurationHours: 4,
+                    sleepEfficiency: 40,
+                    deepSleepMinutes: 15,
+                },
             };
 
             const goodResult = StressCalculator.calculate(mockEmptyCheckIn(), goodSleep);
@@ -316,19 +410,34 @@ describe('StressCalculator', () => {
         });
 
         it('Calculates activity score with optimal range', () => {
-            const lowActivity: ObjectiveHealthData = {
-                activity: { steps: 1000, activeMinutes: 5, calories: 1500, timestamp: new Date().toISOString() },
-                source: 'mock',
+            const lowActivity: HealthData = {
+                ...mockLowStressHealthData(),
+                activity: {
+                    ...mockLowStressHealthData().activity!,
+                    steps: 1000,
+                    activeMinutes: 5,
+                    totalCalories: 1500
+                }
             };
 
-            const optimalActivity: ObjectiveHealthData = {
-                activity: { steps: 8000, activeMinutes: 45, calories: 2300, timestamp: new Date().toISOString() },
-                source: 'mock',
+            const optimalActivity: HealthData = {
+                ...mockLowStressHealthData(),
+                activity: {
+                    ...mockLowStressHealthData().activity!,
+                    steps: 8000,
+                    activeMinutes: 45,
+                    totalCalories: 2300
+                }
             };
 
-            const highActivity: ObjectiveHealthData = {
-                activity: { steps: 25000, activeMinutes: 200, calories: 4000, timestamp: new Date().toISOString() },
-                source: 'mock',
+            const highActivity: HealthData = {
+                ...mockLowStressHealthData(),
+                activity: {
+                    ...mockLowStressHealthData().activity!,
+                    steps: 25000,
+                    activeMinutes: 200,
+                    totalCalories: 4000
+                }
             };
 
             const lowActivityResult = StressCalculator.calculate(mockEmptyCheckIn(), lowActivity);
