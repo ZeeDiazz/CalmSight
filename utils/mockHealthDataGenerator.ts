@@ -21,11 +21,11 @@ export class MockHealthDataService implements IHealthDataService {
     }
 
     async getLatestHealthData(): Promise<HealthData> {
-        return this.generateDailyHealthData('moderate');
+        return this.generateHealthData('moderate');
     }
 
     async getHealthDataForDate(date: string): Promise<HealthData> {
-        return this.generateDailyHealthData('moderate', date);
+        return this.generateHealthData('moderate', date);
     }
 
     async getHealthDataRange(startDate: string, endDate: string): Promise<HealthData[]> {
@@ -35,7 +35,7 @@ export class MockHealthDataService implements IHealthDataService {
 
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             const dateStr = d.toISOString().split('T')[0];
-            data.push(this.generateDailyHealthData('moderate', dateStr));
+            data.push(this.generateHealthData('moderate', dateStr));
         }
 
         return data;
@@ -61,7 +61,7 @@ export class MockHealthDataService implements IHealthDataService {
         return data.activity;
     }
 
-    generateDailyHealthData(stressLevel: 'low' | 'moderate' | 'high', date?: string): HealthData {
+    generateHealthData(stressLevel: 'low' | 'moderate' | 'high', date?: string): HealthData {
         const targetDate = date || new Date().toISOString().split('T')[0];
         const now = new Date().toISOString();
 
@@ -85,6 +85,25 @@ export class MockHealthDataService implements IHealthDataService {
             lastUpdated: now,
             dataCompleteness: 'complete',
         };
+    }
+
+    generateCorrelatedHealthData(
+        mood: 'overwhelmed' | 'drained' | 'neutral' | 'energized',
+        worryLevel: 'minimal' | 'moderate' | 'significant' | 'overwhelming'
+    ): HealthData {
+        let stressLevel: 'low' | 'moderate' | 'high';
+
+        if (mood === 'overwhelmed' || worryLevel === 'overwhelming') {
+            stressLevel = 'high';
+        } else if (mood === 'drained' || worryLevel === 'significant') {
+            stressLevel = 'moderate';
+        } else if (mood === 'energized' && worryLevel === 'minimal') {
+            stressLevel = 'low';
+        } else {
+            stressLevel = 'moderate';
+        }
+
+        return this.generateHealthData(stressLevel);
     }
 
     private generateSleepSession(stressLevel: 'low' | 'moderate' | 'high', date: string, weekdayMultiplier: number): SleepSession {
