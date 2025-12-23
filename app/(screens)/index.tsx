@@ -6,9 +6,7 @@ import {HealthData, CheckInData} from '@/interfaces/Types'
 import {StressCalculator} from "@/utils/StressCalculator";
 import {healthDataService} from "@/utils/mockHealthDataGenerator";
 import React, {useEffect, useState} from "react";
-import {formatSleepDuration} from "@/utils/healthDataService";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
-
 
 export default function Index() {
     // TODO: Check if user is logged in and has completed onboarding
@@ -121,7 +119,13 @@ export default function Index() {
     // Format sleep duration from health data
     const getSleepDisplay = (): string => {
         if (healthData?.sleep) {
-            return formatSleepDuration(healthData.sleep.totalDurationHours);
+            const h = Math.floor(healthData.sleep.totalDurationHours);
+            const m = Math.round((healthData.sleep.totalDurationHours - h) * 60);
+
+            if (m === 0) {
+                return `${h}h`;
+            }
+            return `${h}h ${m}m`;
         }
         return '--';
     };
