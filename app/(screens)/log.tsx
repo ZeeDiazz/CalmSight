@@ -128,36 +128,25 @@ const Log = () => {
             stressResult.insights.forEach((insight, i) => {
                 console.log(`  ${i + 1}. ${insight}`);
             });
-            console.log('================================\n');
 
             // Create complete check-in with all data
             const completeCheckIn = {
                 ...checkInData,
-
-                // Stress scores
                 stressScore: stressResult.stressScore,
                 subjectiveScore: stressResult.subjectiveScore,
                 objectiveScore: stressResult.objectiveScore,
                 riskLevel: stressResult.riskLevel,
 
-                // MCT breakdown
                 problemA: stressResult.problemA,
                 problemB: stressResult.problemB,
 
-                // Metadata
                 confidence: stressResult.confidence,
                 dataQuality: stressResult.dataQuality,
 
-                // Objective breakdown
                 objectiveBreakdown: stressResult.objectiveBreakdown,
-
-                // Insights
                 insights: stressResult.insights,
-
-                // Health data (for reference)
                 healthData: healthData,
 
-                // Timestamp
                 timestamp: new Date().toISOString(),
             };
 
