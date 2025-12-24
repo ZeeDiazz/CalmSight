@@ -8,7 +8,7 @@ import {useRouter} from "expo-router";
 import StageTimeQuestion from "@/components/log-component/stagesTimeQuestions";
 import {CheckInData} from "@/interfaces/Types";
 import {StressCalculator} from "@/utils/StressCalculator";
-import {healthDataService} from "@/utils/mockHealthDataGenerator";
+import {mockHealthDataService} from "@/utils/mockHealthDataGenerator";
 
 const Log = () => {
     const router = useRouter();
@@ -88,7 +88,7 @@ const Log = () => {
             const worryLevel = checkInData.worryTime as 'minimal' | 'moderate' | 'significant' | 'overwhelming' | null;
 
             // Generate health data that correlates with the check-in responses
-            const healthData = healthDataService.generateCorrelatedHealthData(
+            const healthData = mockHealthDataService.generateCorrelatedHealthData(
                 mood || 'neutral',
                 worryLevel || 'minimal'
             );

@@ -4,7 +4,7 @@ import PatternAlertCard from "@/components/patternAlertCard";
 import {Redirect} from "expo-router";
 import {HealthData, CheckInData} from '@/interfaces/Types'
 import {StressCalculator} from "@/utils/StressCalculator";
-import {healthDataService} from "@/utils/mockHealthDataGenerator";
+import {mockHealthDataService} from "@/utils/mockHealthDataGenerator";
 import React, {useEffect, useState} from "react";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
 
@@ -24,7 +24,7 @@ export default function Index() {
     const loadHealthData = async () => {
         try {
             // Get health data from service
-            const dailyHealth = await healthDataService.getLatestHealthData();
+            const dailyHealth = await mockHealthDataService.getLatestHealthData();
             setHealthData(dailyHealth);
 
             // TODO: Load latest check-in from AsyncStorage/backend

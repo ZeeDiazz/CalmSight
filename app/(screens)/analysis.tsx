@@ -4,7 +4,7 @@ import WeeklyStressChart from "@/components/analysis/weeklyStressChart";
 import PredictionCard from "@/components/analysis/predictionCard";
 import BreakSuggestionCard from "@/components/analysis/breakSuggestionCard";
 import {StressComparisonCard, MostStressfulDayCard, SleepImpactCard, StressTriggersCard, WeeklySummaryCard} from "@/components/analysis/trendCards";
-import {healthDataService} from "@/utils/mockHealthDataGenerator";
+import {mockHealthDataService} from "@/utils/mockHealthDataGenerator";
 import {StressCalculator} from "@/utils/StressCalculator";
 import {HealthData, CheckInData} from "@/interfaces/Types";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
@@ -90,7 +90,7 @@ const Analysis = () => {
             const weekData: DailyStressData[] = [];
 
             for (const date of dates) {
-                const healthData = await healthDataService.getHealthDataForDate(date);
+                const healthData = await mockHealthDataService.getHealthDataForDate(date);
 
                 // Generate mock check-in that varies by day
                 const mockCheckIn = generateMockCheckInForDate(date);
