@@ -28,7 +28,6 @@ export default function Index() {
 
     const loadHealthData = async () => {
         try {
-
             // Get health data from service (Real or Mock)
             const dailyHealth = await service.getLatestHealthData();
             setHealthData(dailyHealth);
@@ -70,7 +69,7 @@ export default function Index() {
             const result = StressCalculator.calculate(mockCheckIn, dailyHealth);
             setStressResult(result);
 
-            console.log('=== Home Page Stress Calculation ===');
+            console.log('Home Page Stress Calculation');
             console.log('Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
             console.log('Final Score:', result.stressScore);
             console.log('Risk Level:', result.riskLevel);
