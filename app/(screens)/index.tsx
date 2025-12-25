@@ -24,7 +24,7 @@ export default function Index() {
         if (status !== 'loading') {
             loadHealthData();
         }
-    }, [status]);
+    }, [status, isRealData]);
 
     const loadHealthData = async () => {
         try {

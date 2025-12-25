@@ -46,18 +46,18 @@ export const useHealthService = (): UseHealthServiceResult => {
 
         // Non-Android platforms always use mock, TODO: change logic after HealthKit Implementation
         if (Platform.OS !== 'android') {
+           setActiveService(mockHealthDataService);
             setStatus('mock');
             setPermissionsGranted(true); // Mock always "has permission"
-            setActiveService(mockHealthDataService);
             return;
         }
 
         // Android without Health Connect service loaded
         if (!androidHealthDataService) {
-            console.log('Health Service: Using mock data (Health Connect module not loaded)');
-            setActiveService(mockHealthDataService);
-            setStatus('mock');
-            setPermissionsGranted(true);
+            console.log('Health Service: Health Connect module not loaded');
+            //setActiveService(mockHealthDataService);
+            setPermissionsGranted(false);
+            setStatus('unavailable');
             return;
         }
 
@@ -66,23 +66,34 @@ export const useHealthService = (): UseHealthServiceResult => {
             console.log('Health Connect isAvailable():', available);
 
             if (!available) {
-                setStatus('unavailable');
+                console.log('Health Service: Health Connect not available on device');
                 setPermissionsGranted(false);
-                setActiveService(mockHealthDataService);
+                //setActiveService(mockHealthDataService);
                 setError('Health Connect is not installed on this device');
+                setStatus('unavailable');
                 return;
             }
 
+            const hasPermissions = await checkExistingPermissions();
+            console.log('Health Service: hasPermissions =', hasPermissions);
+
+            if(hasPermissions){
+                setActiveService(androidHealthDataService);
+                setPermissionsGranted(hasPermissions); //or true
+            } else {
+                console.log('Health Service: No permissions, using mock data');
+                //setActiveService(mockHealthDataService);
+                setPermissionsGranted(false);
+            }
+            //setActiveService(hasPermissions ? androidHealthDataService : mockHealthDataService);
+
             setStatus('available');
 
-            const hasPermissions = await checkExistingPermissions();
-            setPermissionsGranted(hasPermissions); //or true
-            setActiveService(hasPermissions ? androidHealthDataService : mockHealthDataService);
         } catch (err) {
-            setStatus('unavailable');
-            setPermissionsGranted(false);
             setActiveService(mockHealthDataService);
+            setPermissionsGranted(false);
             setError('Failed to initialize Health Connect');
+            setStatus('unavailable');
             console.error('Health Service: Error during initialization', err);
         }
     };
