@@ -2,9 +2,9 @@ import Card from "@/components/card";
 import {ScrollView, Text, View} from "react-native";
 import PatternAlertCard from "@/components/patternAlertCard";
 import {Redirect} from "expo-router";
-import {HealthData, CheckInData} from '@/interfaces/Types'
+import {HealthData, CheckInData} from '@/interfaces/Types';
 import {StressCalculator} from "@/utils/StressCalculator";
-import {mockHealthDataService} from "@/utils/mockHealthDataGenerator";
+import {useHealthService} from "@/hooks/useHealthService";
 import React, {useEffect, useState} from "react";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
 
@@ -13,22 +13,35 @@ export default function Index() {
     const hasCompletedOnboarding = true;
     const isLoggedIn = true;
 
+    // Health service hook
+    const { service, status, isRealData } = useHealthService();
+
     // State for stress calculation and health data
     const [stressResult, setStressResult] = useState<StressCalculation | null>(null);
     const [healthData, setHealthData] = useState<HealthData | null>(null);
 
     useEffect(() => {
-        loadHealthData();
-    }, []);
+        if (status !== 'loading') {
+            loadHealthData();
+        }
+    }, [status]);
 
     const loadHealthData = async () => {
         try {
-            // Get health data from service
-            const dailyHealth = await mockHealthDataService.getLatestHealthData();
+
+            // Get health data from service (Real or Mock)
+            const dailyHealth = await service.getLatestHealthData();
             setHealthData(dailyHealth);
 
+            console.log('Health Data Received:', {
+                hasSleep: !!dailyHealth.sleep,
+                hasHrv: !!dailyHealth.hrv,
+                hasHeartRate: !!dailyHealth.heartRate,
+                hasActivity: !!dailyHealth.activity,
+                sources: dailyHealth.sources,
+            });
+
             // TODO: Load latest check-in from AsyncStorage/backend
-            // For now, use mock data
             const mockCheckIn: CheckInData = {
                 type: 'daily',
                 mood: 'neutral',
@@ -58,19 +71,9 @@ export default function Index() {
             setStressResult(result);
 
             console.log('=== Home Page Stress Calculation ===');
+            console.log('Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
             console.log('Final Score:', result.stressScore);
-            console.log('Problem A:', result.problemA.score);
-            console.log('Problem B:', result.problemB.score);
             console.log('Risk Level:', result.riskLevel);
-            console.log('');
-            console.log('=== Health Data ===');
-            console.log('Sleep:', dailyHealth.sleep?.totalDurationHours, 'h');
-            console.log('Sleep Efficiency:', dailyHealth.sleep?.sleepEfficiency, '%');
-            console.log('Deep Sleep:', dailyHealth.sleep?.deepSleepMinutes, 'min');
-            console.log('REM Sleep:', dailyHealth.sleep?.remSleepMinutes, 'min');
-            console.log('HRV:', dailyHealth.hrv?.interval, 'ms');
-            console.log('Resting HR:', dailyHealth.heartRate?.restingBpm, 'bpm');
-            console.log('Steps:', dailyHealth.activity?.steps);
         } catch (error) {
             console.error('Error loading health data:', error);
         }
@@ -85,99 +88,97 @@ export default function Index() {
     }
 
     // Get stress level description
-    const getStressDescription = (score: number, riskLevel: string) => {
-        if (riskLevel === 'High') {
-            return 'High stress detected - take immediate action';
-        } else if (riskLevel === 'Moderate') {
-            return 'Moderate stress - monitor closely';
-        } else {
-            return 'Low stress - good management';
-        }
+    const getStressDescription = (riskLevel: string) => {
+        if (riskLevel === 'High') return 'High stress detected - take immediate action';
+        if (riskLevel === 'Moderate') return 'Moderate stress - monitor closely';
+        return 'Low stress - good management';
     };
 
-    // Get stress level text
     const getStressLevelText = (riskLevel: string) => {
         if (riskLevel === 'High') return 'High Stress';
         if (riskLevel === 'Moderate') return 'Moderate Stress';
         return 'Low Stress';
     };
 
-    // Get worry time label
     const getWorryTimeLabel = (score: number) => {
         if (score >= 25) return 'High';
         if (score >= 15) return 'Mid';
         return 'Low';
     };
 
-    // Get threat monitoring label
     const getThreatLabel = (score: number) => {
         if (score >= 25) return 'High';
         if (score >= 15) return 'Mid';
         return 'Low';
     };
 
-    // Format sleep duration from health data
-    const getSleepDisplay = (): string => {
-        if (healthData?.sleep) {
-            const h = Math.floor(healthData.sleep.totalDurationHours);
-            const m = Math.round((healthData.sleep.totalDurationHours - h) * 60);
-
-            if (m === 0) {
-                return `${h}h`;
-            }
-            return `${h}h ${m}m`;
-        }
-        return '--';
+    const formatSleepDuration = (hours: number): string => {
+        const h = Math.floor(hours);
+        const m = Math.round((hours - h) * 60);
+        return m === 0 ? `${h}h` : `${h}h ${m}m`;
     };
 
-    // Get sleep quality indicator
+    const getSleepDisplay = (): string => {
+        if (!healthData?.sleep) return '--';
+        if (healthData.sleep.totalDurationHours === 0) return '--';
+        return formatSleepDuration(healthData.sleep.totalDurationHours);
+    };
+
     const getSleepQualityColor = (): string => {
         if (!healthData?.sleep) return 'text-[#7B9BA8]';
+        if (healthData.sleep.totalDurationHours === 0) return 'text-[#7B9BA8]';
         const efficiency = healthData.sleep.sleepEfficiency;
-        if (efficiency >= 85) return 'text-[#5FA8A8]';  // Good
-        if (efficiency >= 70) return 'text-[#7B9BA8]';  // Moderate
-        return 'text-[#D4A574]';  // Poor
+        if (efficiency >= 85) return 'text-[#5FA8A8]';
+        if (efficiency >= 70) return 'text-[#7B9BA8]';
+        return 'text-[#D4A574]';
     };
 
-    // Get HRV display
     const getHrvDisplay = (): string => {
-        if (healthData?.hrv) {
-            return `${healthData.hrv.interval} ms`;
-        }
-        return '--';
+        if (!healthData?.hrv || healthData.hrv.interval === 0) return '--';
+        return `${healthData.hrv.interval} ms`;
     };
 
-    // Get HRV color indicator
     const getHrvColor = (): string => {
-        if (!healthData?.hrv) return 'text-[#7B9BA8]';
+        if (!healthData?.hrv || healthData.hrv.interval === 0) return 'text-[#7B9BA8]';
         const hrv = healthData.hrv.interval;
         if (hrv >= 60) return 'text-[#5FA8A8]';   // Good recovery
         if (hrv >= 40) return 'text-[#7B9BA8]';   // Moderate
         return 'text-[#D4A574]';                   // High stress
     };
 
-    // Get steps display
     const getStepsDisplay = (): string => {
-        if (healthData?.activity) {
-            const steps = healthData.activity.steps;
-            if (steps >= 1000) {
-                return `${(steps / 1000).toFixed(1)}k`;
-            }
-            return steps.toString();
-        }
-        return '--';
+        if (!healthData?.activity) return '--';
+        const steps = healthData.activity.steps;
+        if (steps === 0) return '--';
+        if (steps >= 1000) return `${(steps / 1000).toFixed(1)}k`;
+        return steps.toString();
     };
 
-    // Get activity color
     const getActivityColor = (): string => {
         if (!healthData?.activity) return 'text-[#7B9BA8]';
+        if (healthData.activity.steps === 0) return 'text-[#7B9BA8]';
         const steps = healthData.activity.steps;
-        if (steps >= 8000) return 'text-[#5FA8A8]';   // Great
-        if (steps >= 5000) return 'text-[#7B9BA8]';   // Moderate
-        return 'text-[#D4A574]';                       // Low
+        if (steps >= 8000) return 'text-[#5FA8A8]';
+        if (steps >= 5000) return 'text-[#7B9BA8]';
+        return 'text-[#D4A574]';
     };
 
-    // Pattern data - could be generated from insights
+    const getRestingHrDisplay = (): string => {
+        if (!healthData?.heartRate) return '--';
+        if (healthData.heartRate.restingBpm === 0) return '--';
+        return healthData.heartRate.restingBpm.toString();
+    };
+
+    const getDataSourceDisplay = () => {
+        if (status === 'available') {
+            return '📱 Health Connect';
+        }
+        if (status === 'mock') {
+            return '📱 Demo Data (iOS)';
+        }
+        return '📱 Demo Data';
+    };
+
     const patternData = {
         type: stressResult?.problemB.score && stressResult.problemB.score > stressResult.problemA.score + 20
             ? 'warning' as const
@@ -185,46 +186,20 @@ export default function Index() {
         message: stressResult?.insights[1] || 'Keep up the good work with stress management',
     };
 
-    // Stats from calculation + health data
     const stats = stressResult ? [
-        {
-            value: getWorryTimeLabel(stressResult.problemB.components.worryTime),
-            label: 'WORRY TIME',
-            textColor: stressResult.problemB.components.worryTime >= 20 ? 'text-[#D4A574]' : 'text-[#7B9BA8]'
-        },
-        {
-            value: getThreatLabel(stressResult.problemB.components.threatMonitoring),
-            label: 'THREAT MONITORING',
-            textColor: stressResult.problemB.components.threatMonitoring >= 20 ? 'text-[#D4A574]' : 'text-[#5FA8A8]'
-        },
-        {
-            value: getSleepDisplay(),
-            label: 'SLEEP',
-            textColor: getSleepQualityColor()
-        },
-        {
-            value: getHrvDisplay(),
-            label: 'HRV',
-            textColor: getHrvColor()
-        },
-        {
-            value: stressResult.riskLevel === 'High' ? 'Chronic' : 'Acute',
-            label: 'STRESS TYPE',
-            textColor: stressResult.riskLevel === 'High' ? 'text-[#D4A574]' : 'text-[#5FA8A8]'
-        },
-        {
-            value: stressResult.riskLevel,
-            label: 'BURNOUT RISK',
-            textColor: stressResult.riskLevel === 'High' ? 'text-[#D4A574]' :
-                stressResult.riskLevel === 'Moderate' ? 'text-[#7B9BA8]' : 'text-[#5FA8A8]'
-        },
+        { value: getWorryTimeLabel(stressResult.problemB.components.worryTime), label: 'WORRY TIME', textColor: stressResult.problemB.components.worryTime >= 20 ? 'text-[#D4A574]' : 'text-[#7B9BA8]' },
+        { value: getThreatLabel(stressResult.problemB.components.threatMonitoring), label: 'THREAT MONITORING', textColor: stressResult.problemB.components.threatMonitoring >= 20 ? 'text-[#D4A574]' : 'text-[#5FA8A8]' },
+        { value: getSleepDisplay(), label: 'SLEEP', textColor: getSleepQualityColor() },
+        { value: getHrvDisplay(), label: 'HRV', textColor: getHrvColor() },
+        { value: stressResult.riskLevel === 'High' ? 'Chronic' : 'Acute', label: 'STRESS TYPE', textColor: stressResult.riskLevel === 'High' ? 'text-[#D4A574]' : 'text-[#5FA8A8]' },
+        { value: stressResult.riskLevel, label: 'BURNOUT RISK', textColor: stressResult.riskLevel === 'High' ? 'text-[#D4A574]' : stressResult.riskLevel === 'Moderate' ? 'text-[#7B9BA8]' : 'text-[#5FA8A8]' },
     ] : [
-        { value: '--', label: 'WORRY TIME', textColor: 'text-[#7B9BA8]'},
-        { value: '--', label: 'THREAT MONITORING', textColor: 'text-[#7B9BA8]'},
-        { value: getSleepDisplay(), label: 'SLEEP', textColor: getSleepQualityColor()},
-        { value: getHrvDisplay(), label: 'HRV', textColor: getHrvColor()},
-        { value: '--', label: 'STRESS TYPE', textColor: 'text-[#7B9BA8]'},
-        { value: '--', label: 'BURNOUT RISK', textColor: 'text-[#7B9BA8]'},
+        { value: '--', label: 'WORRY TIME', textColor: 'text-[#7B9BA8]' },
+        { value: '--', label: 'THREAT MONITORING', textColor: 'text-[#7B9BA8]' },
+        { value: '--', label: 'SLEEP', textColor: 'text-[#7B9BA8]' },
+        { value: '--', label: 'HRV', textColor: 'text-[#7B9BA8]' },
+        { value: '--', label: 'STRESS TYPE', textColor: 'text-[#7B9BA8]' },
+        { value: '--', label: 'BURNOUT RISK', textColor: 'text-[#7B9BA8]' },
     ];
 
     return (
@@ -254,21 +229,20 @@ export default function Index() {
 
                             <View className="flex-1 ml-5">
                                 <Text className="text-2xl font-semibold text-primary mb-1">
-                                    {stressResult.stressScore}  {getStressLevelText(stressResult.riskLevel)}
+                                    {getStressLevelText(stressResult.riskLevel)}
                                 </Text>
                                 <Text className="text-sm text-secondary leading-5">
-                                    {getStressDescription(stressResult.stressScore, stressResult.riskLevel)}
+                                    {getStressDescription(stressResult.riskLevel)}
                                 </Text>
 
                                 {/* Confidence*/}
                                 <View className="flex-row items-center mt-2">
                                     <View className={`w-2 h-2 rounded-full mr-2 ${
                                         stressResult.dataQuality === 'excellent' ? 'bg-green-500' :
-                                            stressResult.dataQuality === 'good' ? 'bg-blue-500' :
-                                                'bg-orange-500'
+                                            stressResult.dataQuality === 'good' ? 'bg-blue-500' : 'bg-orange-500'
                                     }`} />
                                     <Text className="text-sm text-secondary">
-                                        {stressResult.confidence}% Confidence • {stressResult.dataQuality}
+                                        {stressResult.confidence}% Confidence
                                     </Text>
                                 </View>
                             </View>
@@ -312,10 +286,8 @@ export default function Index() {
                                 <Text className={`text-lg font-bold ${getSleepQualityColor()}`}>
                                     {getSleepDisplay()}
                                 </Text>
-                                {healthData.sleep && (
-                                    <Text className="text-xs text-secondary">
-                                        {healthData.sleep.sleepEfficiency}%
-                                    </Text>
+                                {healthData.sleep && healthData.sleep.totalDurationHours > 0 && (
+                                    <Text className="text-xs text-secondary">{healthData.sleep.sleepEfficiency}%</Text>
                                 )}
                             </View>
 
@@ -324,15 +296,19 @@ export default function Index() {
                                 <Text className={`text-lg font-bold ${getHrvColor()}`}>
                                     {healthData.hrv?.interval || '--'}
                                 </Text>
-                                <Text className="text-xs text-secondary">ms</Text>
+                                {healthData.hrv && healthData.hrv.interval > 0 && (
+                                    <Text className="text-xs text-secondary">ms</Text>
+                                )}
                             </View>
 
                             <View className="items-center flex-1">
                                 <Text className="text-xs text-secondary-dark mb-1">Resting HR</Text>
                                 <Text className="text-lg font-bold text-secondary-dark">
-                                    {healthData.heartRate?.restingBpm || '--'}
+                                    {getRestingHrDisplay()}
                                 </Text>
-                                <Text className="text-xs text-secondary">bpm</Text>
+                                {healthData.heartRate && healthData.heartRate.restingBpm > 0 && (
+                                    <Text className="text-xs text-secondary">bpm</Text>
+                                )}
                             </View>
 
                             <View className="items-center flex-1">
@@ -340,14 +316,21 @@ export default function Index() {
                                 <Text className={`text-lg font-bold ${getActivityColor()}`}>
                                     {getStepsDisplay()}
                                 </Text>
-                                <Text className="text-xs text-secondary">today</Text>
+                                {healthData.activity && healthData.activity.steps > 0 && (
+                                    <Text className="text-xs text-secondary">today</Text>
+                                )}
                             </View>
                         </View>
 
                         <View className="mt-3 pt-2 border-t border-[#D9D9D9]">
                             <Text className="text-xs text-secondary text-center">
-                                📱 {healthData.sources[0]?.name || 'Unknown source'}
+                                {getDataSourceDisplay()}
                             </Text>
+                            {status === 'available' && healthData.dataCompleteness === 'minimal' && (
+                                <Text className="text-xs text-secondary text-center mt-1">
+                                    No health data recorded yet
+                                </Text>
+                            )}
                         </View>
                     </View>
                 )}
@@ -360,13 +343,13 @@ export default function Index() {
                         {stressResult.insights.slice(0, 3).map((insight, index) => (
                             <View key={index} className="flex-row mb-2">
                                 <Text className="text-primary mr-2">-</Text>
-                                <Text className="text-sm text-secondary-dark flex-1">
-                                    {insight}
-                                </Text>
+                                <Text className="text-sm text-secondary-dark flex-1">{insight}</Text>
                             </View>
                         ))}
                     </View>
                 )}
+
+                <View className="h-6" />
             </ScrollView>
         </View>
   );
