@@ -1,7 +1,5 @@
-import {View, Text, TextInput, ScrollView, TouchableWithoutFeedback, Keyboard} from "react-native";
-
+import {View, Text, TextInput, ScrollView, TouchableWithoutFeedback, Keyboard, TouchableOpacity} from "react-native";
 import {useEffect, useState} from "react";
-import TextCard from "@/components/log-component/textCard";
 
 interface StageSymptomsProps {
     selected: {
@@ -46,16 +44,23 @@ const StageSymptoms = ({selected, onUpdate}: StageSymptomsProps) => {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <ScrollView>
-                <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">Symptoms</Text>
-                <View className="flex-row flex-wrap justify-center gap-y-3">
+                <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[3%] pl-[5%]">Symptoms</Text>
+                <View className="flex-row flex-wrap gap-2 mb-6 px-[3%]">
                     {symptoms.map((symptom) => (
-                        <View key={symptom.id} className="w-[48%]">
-                            <TextCard
-                                title={symptom.title}
-                                subtext={symptom.subtext}
-                                isSelected={selectedSymptoms.includes(symptom.id)}
+                        <View key={symptom.id} >
+                            <TouchableOpacity
+                                key={symptom.id}
                                 onPress={() => handleSelect(symptom.id)}
-                            />
+                                className={`px-4 py-2 rounded-full border ${
+                                    selectedSymptoms.includes(symptom.id)
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-[#D9D9D9] bg-white'
+                                }`}>
+                                <Text className={`${
+                                    selectedSymptoms.includes(symptom.id) ? 'text-primary font-medium' : 'text-secondary-dark'}`}>
+                                    {symptom.title}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
                     ))}
                 </View>
