@@ -8,10 +8,13 @@ import StageTimeQuestion from "@/components/log-component/stagesTimeQuestions";
 import {CheckInData} from "@/interfaces/Types";
 import {StressCalculator} from "@/utils/StressCalculator";
 import {useHealthService} from "@/hooks/useHealthService";
+import {getCheckInService} from "@/hooks/useCheckInService";
+import {localCheckInService} from "@/utils/localCheckInService";
 
 const Log = () => {
     const totalStages = 7;
     const [currentStage, setCurrentStage] = useState(1);
+    const [isSaving, setIsSaving] = useState(false);
 
     const [checkInData, setCheckInData] = useState<CheckInData>({
         type: 'daily',
@@ -46,29 +49,44 @@ const Log = () => {
     };
 
     const handleSave = async () => {
-        // Get health data from service (real or mock)
-        const healthData = await service.getLatestHealthData();
+        setIsSaving(true);
+        try{
+            // Get health data from service (real or mock)
+            const healthData = await service.getLatestHealthData();
 
-        // Calculate stress
-        const stressResult = StressCalculator.calculate(checkInData, healthData);
+            // Calculate stress
+            const stressResult = StressCalculator.calculate(checkInData, healthData);
 
-        // TODO: Save to backend/AsyncStorage
-        console.log('Check-in Complete');
-        console.log('Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
-        console.log('Check-in Data:', JSON.stringify(checkInData, null, 2));
-        console.log('Health Data:', JSON.stringify({
-            sleep: healthData.sleep?.totalDurationHours,
-            hrv: healthData.hrv?.interval,
-            heartRate: healthData.heartRate?.restingBpm,
-            steps: healthData.activity?.steps,
-        }, null, 2));
-        console.log('Stress Score:', stressResult.stressScore);
-        console.log('Problem A:', stressResult.problemA.score);
-        console.log('Problem B:', stressResult.problemB.score);
-        console.log('Risk Level:', stressResult.riskLevel);
-        console.log('Insights:', stressResult.insights);
+            const today = new Date().toISOString().split('T')[0];
 
-        setCurrentStage(totalStages);
+            // Save check-in data
+            const checkInService = getCheckInService();
+            await checkInService.saveCheckIn(checkInData);
+
+            // Save calculated stress score
+            await localCheckInService.saveStressScore(today, stressResult);
+
+            console.log('Check-in Complete');
+            console.log('Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
+            console.log('Check-in Data:', JSON.stringify(checkInData, null, 2));
+            console.log('Health Data:', JSON.stringify({
+                sleep: healthData.sleep?.totalDurationHours,
+                hrv: healthData.hrv?.interval,
+                heartRate: healthData.heartRate?.restingBpm,
+                steps: healthData.activity?.steps,
+            }, null, 2));
+            console.log('Stress Score:', stressResult.stressScore);
+            console.log('Problem A:', stressResult.problemA.score);
+            console.log('Problem B:', stressResult.problemB.score);
+            console.log('Risk Level:', stressResult.riskLevel);
+            console.log('Insights:', stressResult.insights);
+
+            setCurrentStage(totalStages);
+        } catch (error) {
+            console.error('Error saving check-in:', error);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleNextStage= ()=> {
@@ -119,7 +137,15 @@ const Log = () => {
 
                 <TouchableOpacity
                     onPress={() => {
-                        setCheckInData({ ...checkInData, type: 'daily' });
+                        setCheckInData({
+                            type: 'daily',
+                            mood: null,
+                            worryTime: null,
+                            threatMonitoring: null,
+                            jobDemand: null,
+                            coping: null,
+                            symptoms: null,
+                        });
                         setCurrentStage(1);
                     }}
                     className="bg-primary px-8 py-3 rounded-full"
