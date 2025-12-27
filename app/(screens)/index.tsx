@@ -2,11 +2,14 @@ import Card from "@/components/card";
 import {ScrollView, Text, View} from "react-native";
 import PatternAlertCard from "@/components/patternAlertCard";
 import {Redirect} from "expo-router";
-import {HealthData, CheckInData} from '@/interfaces/Types';
+import {HealthData} from '@/interfaces/Types';
 import {StressCalculator} from "@/utils/StressCalculator";
 import {useHealthService} from "@/hooks/useHealthService";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useState} from "react";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
+import {getCheckInService} from "@/hooks/useCheckInService";
+import {localCheckInService} from "@/utils/localCheckInService";
+import {useFocusEffect} from "expo-router";
 
 export default function Index() {
     // TODO: Check if user is logged in and has completed onboarding
@@ -19,62 +22,62 @@ export default function Index() {
     // State for stress calculation and health data
     const [stressResult, setStressResult] = useState<StressCalculation | null>(null);
     const [healthData, setHealthData] = useState<HealthData | null>(null);
+    const [lastCheckInDate, setLastCheckInDate] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        if (status !== 'loading') {
-            loadHealthData();
-        }
-    }, [status, isRealData]);
+    useFocusEffect(
+        useCallback(() => {
+            if (status !== 'loading') {
+                loadData();
+            }
+        }, [status, isRealData])
+    );
 
-    const loadHealthData = async () => {
+    const loadData = async () => {
         try {
-            // Get health data from service (Real or Mock)
+            setIsLoading(true);
+
+            // Get today's health data
             const dailyHealth = await service.getLatestHealthData();
             setHealthData(dailyHealth);
 
-            console.log('Health Data Received:', {
-                hasSleep: !!dailyHealth.sleep,
-                hasHrv: !!dailyHealth.hrv,
-                hasHeartRate: !!dailyHealth.heartRate,
-                hasActivity: !!dailyHealth.activity,
-                sources: dailyHealth.sources,
-            });
+            console.log('Home Page Data Load');
+            console.log('Health Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
 
-            // TODO: Load latest check-in from AsyncStorage/backend
-            const mockCheckIn: CheckInData = {
-                type: 'daily',
-                mood: 'neutral',
-                worryTime: 'moderate',
-                threatMonitoring: 'minimal',
-                jobDemand: {
-                    workloadToday: 'Moderate',
-                    controlOverTasks: 'High',
-                    socialSupport: 'High',
-                },
-                coping: {
-                    avoidedSituations: 'Rarely',
-                    avoidingThoughts: 'Moderate',
-                    alcoholPills: 'Never',
-                    soughtReassurance: 'Rarely',
-                    controlledMyEmotions: 'Often',
-                    monitorMySymptoms: 'Rarely',
-                },
-                symptoms: {
-                    symptoms: ['focusIssues'],
-                    notes: 'Feeling okay',
-                },
-            };
+            // Get the latest check-in (regardless of date)
+            const checkInService = getCheckInService();
+            const latestCheckIn = await checkInService.getLatestCheckIn();
 
-            // Calculate stress with MCT Problem A/B
-            const result = StressCalculator.calculate(mockCheckIn, dailyHealth);
-            setStressResult(result);
+            if (latestCheckIn) {
+                // Get all stored stress scores and find the latest one
+                const allScores = await localCheckInService.getAllStressScores();
+                const dates = Object.keys(allScores).sort().reverse();
 
-            console.log('Home Page Stress Calculation');
-            console.log('Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
-            console.log('Final Score:', result.stressScore);
-            console.log('Risk Level:', result.riskLevel);
+                if (dates.length > 0) {
+                    // Use the most recent stress score
+                    const latestDate = dates[0];
+                    const latestScore = allScores[latestDate];
+
+                    console.log('Using saved stress score from:', latestDate);
+                    setStressResult(latestScore);
+                    setLastCheckInDate(latestDate);
+                } else {
+                    // Check-in exists but no saved score
+                    console.log('Calculating stress from latest check-in...');
+                    const result = StressCalculator.calculate(latestCheckIn, dailyHealth);
+                    setStressResult(result);
+                    setLastCheckInDate(null);
+                }
+            } else {
+                // No check-ins at all
+                console.log('No check-ins found');
+                setStressResult(null);
+                setLastCheckInDate(null);
+            }
         } catch (error) {
             console.error('Error loading health data:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -212,7 +215,9 @@ export default function Index() {
                 </Text>
             </View>
 
-            <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+            <ScrollView
+                className="flex-1 px-4"
+                showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 45 }}>
                 {/*Stress score*/}
                 {stressResult && (
                     <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9]">
@@ -248,6 +253,24 @@ export default function Index() {
                         </View>
                     </View>
                 )}
+
+                {isLoading && (
+                    <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9] items-center justify-center">
+                        <Text className="text-secondary">Loading...</Text>
+                    </View>
+                )}
+
+                {!isLoading && !stressResult && (
+                    <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9]">
+                        <Text className="text-[18px] font-semibold text-secondary-dark mb-2">
+                            Stress Score
+                        </Text>
+                        <Text className="text-sm text-secondary">
+                            Complete your first check-in to see your stress score.
+                        </Text>
+                    </View>
+                )}
+
 
                 <PatternAlertCard type={patternData.type} message={patternData.message}/>
                 {/* Metrics Grid */}
