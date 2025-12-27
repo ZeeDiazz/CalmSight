@@ -1,7 +1,7 @@
 import Card from "@/components/card";
 import {ScrollView, Text, View} from "react-native";
 import PatternAlertCard from "@/components/patternAlertCard";
-import {Redirect} from "expo-router";
+import {useFocusEffect, Redirect} from "expo-router";
 import {HealthData} from '@/interfaces/Types';
 import {StressCalculator} from "@/utils/StressCalculator";
 import {useHealthService} from "@/hooks/useHealthService";
@@ -9,7 +9,6 @@ import React, {useCallback, useState} from "react";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
 import {getCheckInService} from "@/hooks/useCheckInService";
 import {localCheckInService} from "@/utils/localCheckInService";
-import {useFocusEffect} from "expo-router";
 
 export default function Index() {
     // TODO: Check if user is logged in and has completed onboarding
