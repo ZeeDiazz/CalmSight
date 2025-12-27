@@ -302,4 +302,4 @@ export class MockHealthDataService implements IHealthDataService {
     }
 }
 // Singleton Instance - Only one existing instance of MockHealthDataService
-export const healthDataService = new MockHealthDataService();
+export const mockHealthDataService = new MockHealthDataService();

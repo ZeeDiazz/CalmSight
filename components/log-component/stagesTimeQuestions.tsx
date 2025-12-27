@@ -30,7 +30,7 @@ const StageTimeQuestion = ({ title, selected, onUpdate }: StageTimeQuestionProps
 
     return (
         <View>
-            <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">{title}</Text>
+            <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[3%] pl-[5%]">{title}</Text>
             {
                 options.map((option) => (
                     <TextCard

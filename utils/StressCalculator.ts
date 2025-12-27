@@ -65,6 +65,52 @@ export class StressCalculator {
         };
     }
 
+    static calculateObjectiveOnly(healthData: HealthData): StressCalculation {
+        const hasData = healthData.sleep || healthData.hrv || healthData.heartRate || healthData.activity;
+        if (!hasData){
+            return{
+                stressScore: 0,
+                    subjectiveScore: 0,
+                objectiveScore: 0,
+                problemA: {score: 0, weight: 0.3, components: {mood: 0, jobDemands: 0, symptoms: 0}},
+                problemB: {
+                    score: 0,
+                        weight: 0.7,
+                        components: {worryTime: 0, threatMonitoring: 0, harmfulCoping: 0, worryEnergy: 0}
+                },
+                objectiveBreakdown: {
+                    hrvScore: 0,
+                    sleepScore:0,
+                    heartRateScore:0,
+                    activityScore: 0
+                },
+                    riskLevel: 'Moderate',
+                confidence: 0,
+                dataQuality: 'poor',
+                insights: ['No Data - add check-ins and objective data for better analysis'],
+            };
+        }
+        const objective = this.calculateObjectiveScore(healthData);
+        const finalScore = objective.score;
+
+        return {
+            stressScore: Math.round(finalScore),
+            subjectiveScore: 0,
+            objectiveScore: Math.round(objective.score),
+            problemA: {score: 0, weight: 0.3, components: {mood: 0, jobDemands: 0, symptoms: 0}},
+            problemB: {
+                score: 0,
+                weight: 0.7,
+                components: {worryTime: 0, threatMonitoring: 0, harmfulCoping: 0, worryEnergy: 0}
+            },
+            objectiveBreakdown: objective.breakdown,
+            riskLevel: this.determineRiskLevel(finalScore),
+            confidence: 50,
+            dataQuality: 'fair',
+            insights: ['Objective data only – add check-ins for better accuracy'],
+        };
+    }
+
     private static calculateProblemA(data: CheckInData): problemAProp {
         const moodMap: Record<string, number> = {
             'overwhelmed': 35,
@@ -209,7 +255,7 @@ export class StressCalculator {
     }
 
     private static calculateHRVScore(hrv?: HealthData['hrv']): number {
-        if (!hrv) return 50;
+        if (!hrv || hrv.interval <= 0) return 0;
         if (hrv.interval >= 80) return 10;
         if (hrv.interval >= 60) return 25;
         if (hrv.interval >= 40) return 50;
@@ -218,7 +264,7 @@ export class StressCalculator {
     }
 
     private static calculateSleepScore(sleep?: HealthData['sleep']): number {
-        if (!sleep) return 50;
+        if (!sleep || sleep.totalDurationHours <= 0) return 0;
         let score = 0;
 
         if (sleep.totalDurationHours < 5) score += 40;
@@ -239,7 +285,7 @@ export class StressCalculator {
     }
 
     private static calculateHeartRateScore(hr?: HealthData['heartRate']): number {
-        if (!hr) return 50;
+        if (!hr || hr.restingBpm <= 0) return 0;
         let score = 0;
 
         if (hr.restingBpm < 60) score += 5;
@@ -257,7 +303,7 @@ export class StressCalculator {
     }
 
     private static calculateActivityScore(activity?: HealthData['activity']): number {
-        if (!activity) return 50;
+        if (!activity || activity.steps <= 0) return 0;
         let score = 0;
 
         if (activity.steps < 2000) score += 30;

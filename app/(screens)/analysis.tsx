@@ -1,13 +1,16 @@
 import {View, Text, ScrollView} from "react-native";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useState} from "react";
 import WeeklyStressChart from "@/components/analysis/weeklyStressChart";
 import PredictionCard from "@/components/analysis/predictionCard";
 import BreakSuggestionCard from "@/components/analysis/breakSuggestionCard";
 import {StressComparisonCard, MostStressfulDayCard, SleepImpactCard, StressTriggersCard, WeeklySummaryCard} from "@/components/analysis/trendCards";
-import {healthDataService} from "@/utils/mockHealthDataGenerator";
+import {useHealthService} from "@/hooks/useHealthService";
+import {getCheckInService} from "@/hooks/useCheckInService"
 import {StressCalculator} from "@/utils/StressCalculator";
-import {HealthData, CheckInData} from "@/interfaces/Types";
+import {HealthData} from "@/interfaces/Types";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
+import {localCheckInService} from "@/utils/localCheckInService";
+import {useFocusEffect} from "expo-router";
 
 interface DailyStressData {
     day: string;
@@ -42,8 +45,12 @@ interface StressTrigger {
 }
 
 const Analysis = () => {
+    // Use health service hook
+    const { service, isRealData, status } = useHealthService();
+
     const [weeklyData, setWeeklyData] = useState<DailyStressData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [daysWithCheckIn, setDaysWithCheckIn] = useState(0);
 
     const [weeklyStats, setWeeklyStats] = useState({
         averageStress: 0,
@@ -73,30 +80,47 @@ const Analysis = () => {
     const [sleepImpactData, setSleepImpactData] = useState<SleepImpactData[]>([]);
     const [stressTriggers, setStressTriggers] = useState<StressTrigger[]>([]);
 
-    useEffect(() => {
-        loadWeeklyData();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            if (status !== 'loading') {
+                loadWeeklyData();
+            }
+        }, [status, isRealData])
+    );
 
     const loadWeeklyData = async () => {
         try {
             setIsLoading(true);
 
-            // Get dates for the past 7 days
             const dates = getLastSevenDays();
             const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             const dayShort = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-            // Generate health data and calculate stress for each day
             const weekData: DailyStressData[] = [];
+            const checkInService = getCheckInService();
+            let checkInCount = 0;
 
             for (const date of dates) {
-                const healthData = await healthDataService.getHealthDataForDate(date);
+                // Get health data from service (real or mock)
+                const healthData = await service.getHealthDataForDate(date);
 
-                // Generate mock check-in that varies by day
-                const mockCheckIn = generateMockCheckInForDate(date);
+                let stressResult = await localCheckInService.getStressScoreForDate(date);
 
-                // Calculate stress
-                const stressResult = StressCalculator.calculate(mockCheckIn, healthData);
+                if (!stressResult) {
+                    const checkInData = await checkInService.getCheckInForDate(date);
+
+                    if (checkInData) {
+                        // Calculate and save stress score
+                        stressResult = StressCalculator.calculate(checkInData, healthData);
+                        await localCheckInService.saveStressScore(date, stressResult);
+                        checkInCount++;
+                    } else {
+                        // No check-in for this date
+                        stressResult = StressCalculator.calculateObjectiveOnly(healthData);
+                    }
+                } else {
+                    checkInCount++;
+                }
 
                 const dayOfWeek = new Date(date).getDay();
 
@@ -110,16 +134,17 @@ const Analysis = () => {
                 });
             }
 
+            setDaysWithCheckIn(checkInCount);
             setWeeklyData(weekData);
-
-            // Calculate all statistics
             calculateWeeklyStats(weekData);
             calculateSleepImpact(weekData);
             calculateStressTriggers(weekData);
 
-            console.log('=== Weekly Analysis Data ===');
+            console.log('Weekly Analysis Data');
+            console.log('Health Data Source:', isRealData ? 'Health Connect' : 'Mock Data');
+            console.log('Days with check-ins:', checkInCount, '/ 7');
             weekData.forEach(d => {
-                console.log(`${d.label}: Stress=${d.value}, Sleep=${d.healthData.sleep?.totalDurationHours}h, HRV=${d.healthData.hrv?.interval}ms`);
+                console.log(`${d.label} (${d.date}): Stress=${d.value}, Sleep=${d.healthData.sleep?.totalDurationHours}h`);
             });
 
         } catch (error) {
@@ -131,7 +156,7 @@ const Analysis = () => {
 
     const getLastSevenDays = (): string[] => {
         const dates: string[] = [];
-        for (let i = 6; i >= 0; i--) {
+        for (let i = 0; i < 7; i++) {
             const date = new Date();
             date.setDate(date.getDate() - i);
             dates.push(date.toISOString().split('T')[0]);
@@ -139,49 +164,9 @@ const Analysis = () => {
         return dates;
     };
 
-    // Generate varied check-in data based on day of week
-    const generateMockCheckInForDate = (date: string): CheckInData => {
-        const dayOfWeek = new Date(date).getDay();
-        
-        const stressPatterns: Record<number, Partial<CheckInData>> = {
-            0: { mood: 'neutral', worryTime: 'moderate', threatMonitoring: 'minimal' },      // Sunday
-            1: { mood: 'overwhelmed', worryTime: 'significant', threatMonitoring: 'significant' }, // Monday
-            2: { mood: 'drained', worryTime: 'moderate', threatMonitoring: 'moderate' },    // Tuesday
-            3: { mood: 'neutral', worryTime: 'moderate', threatMonitoring: 'minimal' },      // Wednesday
-            4: { mood: 'neutral', worryTime: 'minimal', threatMonitoring: 'minimal' },       // Thursday
-            5: { mood: 'energized', worryTime: 'minimal', threatMonitoring: 'minimal' },     // Friday
-            6: { mood: 'energized', worryTime: 'minimal', threatMonitoring: 'minimal' },     // Saturday
-        };
-
-        const pattern = stressPatterns[dayOfWeek] || stressPatterns[0];
-
-        return {
-            type: 'daily',
-            mood: pattern.mood || 'neutral',
-            worryTime: pattern.worryTime || 'moderate',
-            threatMonitoring: pattern.threatMonitoring || 'minimal',
-            jobDemand: {
-                workloadToday: dayOfWeek === 1 ? 'High' : 'Moderate',
-                controlOverTasks: dayOfWeek === 1 ? 'Low' : 'High',
-                socialSupport: 'Moderate',
-            },
-            coping: {
-                avoidedSituations: 'Rarely',
-                avoidingThoughts: dayOfWeek === 1 ? 'Often' : 'Rarely',
-                alcoholPills: 'Never',
-                soughtReassurance: 'Rarely',
-                controlledMyEmotions: 'Moderate',
-                monitorMySymptoms: 'Rarely',
-            },
-            symptoms: {
-                symptoms: dayOfWeek === 1 ? ['fatigue', 'tension'] : [],
-                notes: '',
-            },
-        };
-    };
-
     const calculateWeeklyStats = (data: DailyStressData[]) => {
         if (data.length === 0) return;
+
 
         const stressValues = data.map(d => d.value);
         const avgStress = Math.round(stressValues.reduce((a, b) => a + b, 0) / stressValues.length);
@@ -189,15 +174,21 @@ const Analysis = () => {
         const maxStress = Math.max(...stressValues);
         const minStress = Math.min(...stressValues);
 
-        const highestDayData = data.find(d => d.value === maxStress);
-        const highestDay = highestDayData?.label || '';
-        const highestDayStress = highestDayData?.value || 0;
-        const lowestDay = data.find(d => d.value === minStress)?.label || '';
+        const daysWithStress = data.filter(d => d.value !== null && d.value > 0);
 
-        // Count high stress days (>= 60)
+        const highestDayData = data.find(d => d.value === maxStress);
+        let highestDay = highestDayData?.label || '';
+        let highestDayStress = highestDayData?.value || 0;
+        let lowestDay = data.find(d => d.value === minStress)?.label || '';
+
+        if(daysWithStress.length === 0){
+            highestDay =  '';
+            highestDayStress = 0;
+            lowestDay = '';
+        }
+
         const highStressDays = data.filter(d => d.value >= 60).length;
 
-        // Calculate trend (compare first half to second half of week)
         const firstHalf = stressValues.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
         const secondHalf = stressValues.slice(4).reduce((a, b) => a + b, 0) / 3;
 
@@ -205,7 +196,6 @@ const Analysis = () => {
         if (secondHalf < firstHalf - 10) trend = 'improving';
         else if (secondHalf > firstHalf + 10) trend = 'worsening';
 
-        // Calculate average sleep and HRV
         const sleepValues = data
             .map(d => d.healthData.sleep?.totalDurationHours || 0)
             .filter(v => v > 0);
@@ -220,7 +210,6 @@ const Analysis = () => {
             ? Math.round(hrvValues.reduce((a, b) => a + b, 0) / hrvValues.length)
             : 0;
 
-        // Simulate last week average (slightly higher for demo)
         const lastWeekAverage = Math.min(100, avgStress + Math.round(Math.random() * 15) + 5);
 
         setWeeklyStats({
@@ -235,7 +224,6 @@ const Analysis = () => {
             lastWeekAverage,
         });
 
-        // Calculate Problem A/B statistics
         calculateProblemStats(data);
     };
 
@@ -244,20 +232,17 @@ const Analysis = () => {
 
         const n = data.length;
 
-        // Problem A components
         const avgProblemA = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemA.score, 0) / n);
         const avgMood = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemA.components.mood, 0) / n);
         const avgJobDemands = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemA.components.jobDemands, 0) / n);
         const avgSymptoms = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemA.components.symptoms, 0) / n);
 
-        // Problem B components
         const avgProblemB = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemB.score, 0) / n);
         const avgWorryTime = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemB.components.worryTime, 0) / n);
         const avgThreatMonitoring = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemB.components.threatMonitoring, 0) / n);
         const avgHarmfulCoping = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemB.components.harmfulCoping, 0) / n);
         const avgWorryEnergy = Math.round(data.reduce((sum, d) => sum + d.stressResult.problemB.components.worryEnergy, 0) / n);
 
-        // Determine dominant problem
         let dominantProblem: 'A' | 'B' | 'balanced' = 'balanced';
         if (avgProblemB > avgProblemA + 15) {
             dominantProblem = 'B';
@@ -265,35 +250,79 @@ const Analysis = () => {
             dominantProblem = 'A';
         }
 
-        setProblemStats({avgProblemA, avgProblemB, avgMood, avgJobDemands, avgSymptoms, avgWorryTime, avgThreatMonitoring, avgHarmfulCoping, avgWorryEnergy, dominantProblem,});
-
-        console.log('Problem A/B Stats:');
-        console.log('Problem A:', avgProblemA, '(Mood:', avgMood, 'Jobs:', avgJobDemands, 'Symptoms:', avgSymptoms, ')');
-        console.log('Problem B:', avgProblemB, '(Worry:', avgWorryTime, 'Threat:', avgThreatMonitoring, 'Coping:', avgHarmfulCoping, ')');
-        console.log('Dominant:', dominantProblem);
+        setProblemStats({
+            avgProblemA, avgProblemB, avgMood, avgJobDemands, avgSymptoms,
+            avgWorryTime, avgThreatMonitoring, avgHarmfulCoping, avgWorryEnergy,
+            dominantProblem,
+        });
     };
 
     const calculateSleepImpact = (data: DailyStressData[]) => {
-        // Group by sleep duration and calculate average stress
-        const shortSleep = data.filter(d => (d.healthData.sleep?.totalDurationHours || 0) < 6);
-        const mediumSleep = data.filter(d => {
-            const hours = d.healthData.sleep?.totalDurationHours || 0;
+        const daysWithSleepAndStress = data.filter(d =>
+            d.value !== null &&
+            d.healthData.sleep &&
+            d.healthData.sleep.totalDurationHours > 0
+        );
+
+        if (daysWithSleepAndStress.length === 0) {
+            setSleepImpactData([]);
+            return;
+        }
+
+        const shortSleep = daysWithSleepAndStress.filter(d =>
+            d.healthData.sleep!.totalDurationHours < 6
+        );
+        const mediumSleep = daysWithSleepAndStress.filter(d => {
+            const hours = d.healthData.sleep!.totalDurationHours;
             return hours >= 6 && hours < 8;
         });
-        const longSleep = data.filter(d => (d.healthData.sleep?.totalDurationHours || 0) >= 8);
+        const longSleep = daysWithSleepAndStress.filter(d =>
+            d.healthData.sleep!.totalDurationHours >= 8
+        );
 
         const avgStress = (arr: DailyStressData[]) =>
-            arr.length > 0 ? Math.round(arr.reduce((sum, d) => sum + d.value, 0) / arr.length) : 0;
+            arr.length > 0 ? Math.round(arr.reduce((sum, d) => sum + d.value!, 0) / arr.length) : null;
 
-        setSleepImpactData([
-            { label: '<6 hours sleep', stressLevel: avgStress(shortSleep) || 75 },
-            { label: '6-8 hours sleep', stressLevel: avgStress(mediumSleep) || 50 },
-            { label: '8+ hours sleep', stressLevel: avgStress(longSleep) || 35 },
-        ]);
+        // Build array with only categories that have data
+        const impactData: SleepImpactData[] = [];
+
+        const shortStress = avgStress(shortSleep);
+        const mediumStress = avgStress(mediumSleep);
+        const longStress = avgStress(longSleep);
+
+        if (shortStress !== null) {
+            impactData.push({
+                label: `<6h sleep (${shortSleep.length} ${shortSleep.length === 1 ? 'day' : 'days'})`,
+                stressLevel: shortStress
+            });
+        }
+        if (mediumStress !== null) {
+            impactData.push({
+                label: `6-8h sleep (${mediumSleep.length} ${mediumSleep.length === 1 ? 'day' : 'days'})`,
+                stressLevel: mediumStress
+            });
+        }
+        if (longStress !== null) {
+            impactData.push({
+                label: `8+h sleep (${longSleep.length} ${longSleep.length === 1 ? 'day' : 'days'})`,
+                stressLevel: longStress
+            });
+        }
+
+        // Sort by stress level descending (highest stress first)
+        impactData.sort((a, b) => b.stressLevel - a.stressLevel);
+
+        setSleepImpactData(impactData);
+
+        // Log sleep impact analysis
+        console.log('Sleep Impact Analysis');
+        console.log('Days with sleep data:', daysWithSleepAndStress.length);
+        daysWithSleepAndStress.forEach(d => {
+            console.log(`  ${d.label}: ${d.healthData.sleep!.totalDurationHours}h sleep → ${d.value} stress`);
+        });
     };
 
     const calculateStressTriggers = (data: DailyStressData[]) => {
-        // Count triggers based on high scores in different components
         const triggers: Record<string, number> = {
             'Work deadlines': 0,
             'Poor sleep': 0,
@@ -303,6 +332,7 @@ const Analysis = () => {
         };
 
         data.forEach(d => {
+            if (d.healthData.sleep === null) return;
             if (d.stressResult.problemA.components.jobDemands > 20) {
                 triggers['Work deadlines']++;
             }
@@ -320,7 +350,6 @@ const Analysis = () => {
             }
         });
 
-        // Convert to array and sort by count
         const sortedTriggers = Object.entries(triggers)
             .map(([trigger, count]) => ({ trigger, count }))
             .filter(t => t.count > 0)
@@ -330,7 +359,6 @@ const Analysis = () => {
         setStressTriggers(sortedTriggers);
     };
 
-
     const getPredictionData = () => {
         const avgStress = weeklyStats.averageStress;
 
@@ -338,7 +366,7 @@ const Analysis = () => {
         if (avgStress >= 60) riskLevel = 'High Risk';
         else if (avgStress >= 40) riskLevel = 'Medium Risk';
 
-        const pattern = `Highest stress on ${weeklyStats.highestDay}`;
+        const pattern = weeklyStats.highestDay ? `Highest stress on ${weeklyStats.highestDay}` : 'Not enough data for patterns';
 
         const actions: string[] = [];
         if (weeklyStats.averageSleep < 7) {
@@ -354,7 +382,11 @@ const Analysis = () => {
             actions.push('Practice detached mindfulness');
         }
         if (actions.length === 0) {
-            actions.push('Keep up the good work!');
+            if (daysWithCheckIn === 0) {
+                actions.push('Complete daily check-ins for personalized recommendations');
+            } else {
+                actions.push('Keep up the good work!');
+            }
         }
 
         return { riskLevel, pattern, actions };
@@ -373,12 +405,9 @@ const Analysis = () => {
                 title: 'Add Two Breaks Tomorrow',
                 times: ['11:00 am', '14:00 pm'],
             };
-        } else {
-            return {
-                title: 'Add One Break Tomorrow',
-                times: ['12:00 pm'],
-            };
         }
+
+        return { title: 'Add One Break Tomorrow', times: ['12:00 pm'] };
     };
 
     const handleAcceptBreak = () => {
@@ -420,10 +449,15 @@ const Analysis = () => {
                 </Text>
 
                 <View className="mb-6">
+                    <Text className="text-xs text-secondary">
+                        {isRealData ? '📱 Using Health Connect data' : '📱 Using demo data'}
+                    </Text>
+                </View>
+
+                <View className="mb-6">
                     <WeeklyStressChart data={chartData} />
                 </View>
 
-                {/* Weekly Stats Summary */}
                 <View className="bg-background-dark rounded-xl p-4 mb-4 border border-[#D9D9D9]">
                     <View className="flex-row justify-between">
                         <View className="items-center flex-1">
@@ -504,7 +538,6 @@ const Analysis = () => {
                             </View>
                         </View>
 
-                        {/* Visual comparison bar */}
                         <View className="flex-row items-center mb-3">
                             <View className="flex-1">
                                 <View className="flex-row items-center justify-between mb-1">
@@ -535,7 +568,6 @@ const Analysis = () => {
                             </View>
                         </View>
 
-                        {/* MCT Insight */}
                         {problemStats.dominantProblem === 'B' && (
                             <View className="mt-3 pt-3 border-t border-[#D9D9D9]">
                                 <Text className="text-xs text-[#D4A574]">
@@ -545,7 +577,6 @@ const Analysis = () => {
                         )}
                     </View>
 
-                    {/* Problem A Card - The Stressor */}
                     <View className="bg-white rounded-xl p-4 mb-3 border border-[#D9D9D9]">
                         <View className="flex-row items-center mb-3">
                             <View className="w-8 h-8 rounded-full bg-[#7B9BA8]/20 items-center justify-center mr-2">
@@ -586,7 +617,6 @@ const Analysis = () => {
                         </View>
                     </View>
 
-                    {/* Problem B Card - The Response */}
                     <View className="bg-white rounded-xl p-4 mb-3 border border-[#D9D9D9]">
                         <View className="flex-row items-center mb-3">
                             <View className="w-8 h-8 rounded-full bg-[#D4A574]/20 items-center justify-center mr-2">
@@ -642,12 +672,12 @@ const Analysis = () => {
                     </Text>
 
                     <WeeklySummaryCard
-                        checkInsCompleted={weeklyData.length}
+                        checkInsCompleted={daysWithCheckIn}
                         checkInsTotal={7}
                         averageStress={weeklyStats.averageStress}
                         highStressDays={weeklyStats.highStressDays}
                         totalDays={7}
-                        breaksTaken={Math.max(0, 7 - weeklyStats.highStressDays) * 2}
+                        breaksTaken={0}  // TODO: Track actual breaks taken
                     />
 
                     <StressComparisonCard
