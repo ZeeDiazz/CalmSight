@@ -46,7 +46,7 @@ export const useHealthService = (): UseHealthServiceResult => {
 
         // Non-Android platforms always use mock, TODO: change logic after HealthKit Implementation
         if (Platform.OS !== 'android') {
-           setActiveService(mockHealthDataService);
+            setActiveService(mockHealthDataService);
             setStatus('mock');
             setPermissionsGranted(true); // Mock always "has permission"
             return;
@@ -74,61 +74,15 @@ export const useHealthService = (): UseHealthServiceResult => {
                 return;
             }
 
-            const hasPermissions = await checkExistingPermissions();
-            console.log('Health Service: hasPermissions =', hasPermissions);
-
-            if(hasPermissions){
-                setActiveService(androidHealthDataService);
-                setPermissionsGranted(hasPermissions); //or true
-            } else {
-                console.log('Health Service: No permissions, using mock data');
-                //setActiveService(mockHealthDataService);
-                setPermissionsGranted(false);
-            }
-            //setActiveService(hasPermissions ? androidHealthDataService : mockHealthDataService);
-
             setStatus('available');
-
+            setActiveService(androidHealthDataService);
+            setPermissionsGranted(false);
         } catch (err) {
             setActiveService(mockHealthDataService);
             setPermissionsGranted(false);
             setError('Failed to initialize Health Connect');
             setStatus('unavailable');
             console.error('Health Service: Error during initialization', err);
-        }
-    };
-
-    const checkExistingPermissions = async (): Promise<boolean> => {
-        if (!androidHealthDataService) {
-            return false;
-        }
-
-        try {
-            const data = await androidHealthDataService.getLatestHealthData();
-            console.log('Fetched data:', JSON.stringify({
-                date: data.date,
-                hasSleep: data.sleep !== null,
-                hasHeartRate: data.heartRate !== null,
-                hasHrv: data.hrv !== null,
-                hasActivity: data.activity !== null,
-                sources: data.sources,
-                dataCompleteness: data.dataCompleteness,
-            }, null, 2));
-
-            const hasData = data.sleep !== null ||
-                data.heartRate !== null ||
-                data.hrv !== null ||
-                data.activity !== null;
-
-            // User might just not have any health data (my emulator)
-            const hasAccess = hasData || data.sources.some(s => s.type === 'health_connect');
-
-            console.log('Permission check - hasData:', hasData, 'hasAccess:', hasAccess);
-
-            return hasAccess;
-        } catch (err) {
-            console.log('Health Service: Could not fetch data, error:', err);
-            return false;
         }
     };
 
