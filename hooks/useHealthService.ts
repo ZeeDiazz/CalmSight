@@ -55,7 +55,6 @@ export const useHealthService = (): UseHealthServiceResult => {
         // Android without Health Connect service loaded
         if (!androidHealthDataService) {
             console.log('Health Service: Health Connect module not loaded');
-            //setActiveService(mockHealthDataService);
             setPermissionsGranted(false);
             setStatus('unavailable');
             return;
@@ -68,15 +67,25 @@ export const useHealthService = (): UseHealthServiceResult => {
             if (!available) {
                 console.log('Health Service: Health Connect not available on device');
                 setPermissionsGranted(false);
-                //setActiveService(mockHealthDataService);
                 setError('Health Connect is not installed on this device');
                 setStatus('unavailable');
                 return;
             }
 
-            setStatus('available');
-            setActiveService(androidHealthDataService);
-            setPermissionsGranted(false);
+            const granted = await androidHealthDataService.requestPermissions();
+
+            if (granted) {
+                setActiveService(androidHealthDataService);
+                setStatus('available');
+                setPermissionsGranted(true);  // This enables isRealData
+                console.log('Health Service: Permissions granted, switched to Health Connect');
+            } else {
+                setError('Some health permissions were denied');
+                setPermissionsGranted(false);
+            }
+
+            console.log('Health Service: Health Connect available, awaiting permissions');
+
         } catch (err) {
             setActiveService(mockHealthDataService);
             setPermissionsGranted(false);
@@ -107,7 +116,6 @@ export const useHealthService = (): UseHealthServiceResult => {
         }
 
         if (!androidHealthDataService || Platform.OS !== 'android') {
-            setPermissionsGranted(true);
             return false;
         }
 
