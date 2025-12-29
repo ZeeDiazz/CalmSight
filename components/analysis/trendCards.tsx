@@ -99,7 +99,9 @@ export const StressComparisonCard = ({thisWeek = 0, lastWeek = 0}: Partial<Stres
     );
 };
 
-export const MostStressfulDayCard = ({day = '--', averageStress = 0, description = 'Consistently high stress',}: Partial<MostStressfulDayCardProps>) => {
+export const MostStressfulDayCard = ({day = '--', averageStress = 0, description = 'Consistently high stress'}: Partial<MostStressfulDayCardProps>) => {
+    const hasData = averageStress > 0 && day !== '' && day !== '--' && day !== 'N/A';
+
     const getBadgeColor = () => {
         if (averageStress >= 70) return 'bg-red-100';
         if (averageStress >= 50) return 'bg-orange-100';
@@ -121,16 +123,16 @@ export const MostStressfulDayCard = ({day = '--', averageStress = 0, description
             <View className="flex-row items-center justify-between">
                 <View>
                     <Text className="text-2xl font-bold text-secondary-dark">
-                        {day}
+                        {hasData ? day : 'None'}
                     </Text>
                     <Text className="text-sm text-secondary">
-                        {description}
+                        {hasData ? description : 'No stress data available'}
                     </Text>
                 </View>
 
                 <View className={`px-3 py-1 rounded-full ${getBadgeColor()}`}>
                     <Text className={`text-sm font-semibold ${getTextColor()}`}>
-                        {averageStress}% avg
+                        {hasData ? `${averageStress}% avg` : 'No data'}
                     </Text>
                 </View>
             </View>
@@ -138,7 +140,8 @@ export const MostStressfulDayCard = ({day = '--', averageStress = 0, description
     );
 };
 
-export const SleepImpactCard = ({data = [],}: Partial<SleepImpactCardProps>) => {
+export const SleepImpactCard = ({data = []}: Partial<SleepImpactCardProps>) => {
+    console.log('SLEEP DATA' + data);
     const getBarColor = (stress: number) => {
         if (stress >= 60) return 'bg-[#D47474]';
         if (stress >= 40) return 'bg-[#D4A574]';
@@ -151,21 +154,32 @@ export const SleepImpactCard = ({data = [],}: Partial<SleepImpactCardProps>) => 
         return 'text-primary-dark';
     };
 
-    // Default data if none provided
-    const displayData = data.length > 0 ? data : [
-        { label: '<6 hours sleep', stressLevel: 0 },
-        { label: '6-7 hours sleep', stressLevel: 0 },
-        { label: '8+ hours sleep', stressLevel: 0 },
-    ];
-
+    if (data.length === 0) {
+        return (
+            <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+                <Text className="text-base font-semibold text-secondary-dark mb-4">
+                    Sleep Impact on Stress
+                </Text>
+                <View className="items-center py-4">
+                    <Text className="text-2xl mb-2">😴</Text>
+                    <Text className="text-sm text-secondary text-center">
+                        No sleep data available yet.
+                    </Text>
+                    <Text className="text-xs text-secondary text-center mt-1">
+                        Connect a sleep tracker or complete check-ins to see how sleep affects your stress.
+                    </Text>
+                </View>
+            </View>
+        );
+    }
     return (
         <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
             <Text className="text-base font-semibold text-secondary-dark mb-4">
                 Sleep Impact on Stress
             </Text>
 
-            {displayData.map((item, index) => (
-                <View key={index} className={index < displayData.length - 1 ? 'mb-3' : ''}>
+            {data.map((item, index) => (
+                <View key={index} className={index < data.length - 1 ? 'mb-3' : ''}>
                     <View className="flex-row justify-between mb-1">
                         <Text className="text-sm text-secondary">{item.label}</Text>
                         <Text className={`text-sm font-semibold ${getTextColor(item.stressLevel)}`}>
@@ -184,13 +198,27 @@ export const SleepImpactCard = ({data = [],}: Partial<SleepImpactCardProps>) => 
     );
 };
 
-export const StressTriggersCard = ({triggers = [], maxCount, period = 'this week',}: Partial<StressTriggersCardProps>) => {
-    // Default triggers if none provided
-    const displayTriggers = triggers.length > 0 ? triggers : [
-        { trigger: 'No data yet', count: 0 },
-    ];
+export const StressTriggersCard = ({triggers = [], maxCount, period = 'this week'}: Partial<StressTriggersCardProps>) => {
+    if (triggers.length === 0) {
+        return (
+            <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+                <Text className="text-base font-semibold text-secondary-dark mb-4">
+                    Top Stress Triggers
+                </Text>
+                <View className="items-center py-4">
+                    <Text className="text-2xl mb-2">📊</Text>
+                    <Text className="text-sm text-secondary text-center">
+                        No triggers identified yet.
+                    </Text>
+                    <Text className="text-xs text-secondary text-center mt-1">
+                        Complete daily check-ins to identify your stress patterns.
+                    </Text>
+                </View>
+            </View>
+        );
+    }
 
-    const actualMaxCount = maxCount || Math.max(...displayTriggers.map(t => t.count), 1);
+    const actualMaxCount = maxCount || Math.max(...triggers.map(t => t.count), 1);
 
     return (
         <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
@@ -198,8 +226,8 @@ export const StressTriggersCard = ({triggers = [], maxCount, period = 'this week
                 Top Stress Triggers
             </Text>
 
-            {displayTriggers.map((item, index) => (
-                <View key={index} className={index < displayTriggers.length - 1 ? 'mb-3' : ''}>
+            {triggers.map((item, index) => (
+                <View key={index} className={index < triggers.length - 1 ? 'mb-3' : ''}>
                     <View className="flex-row justify-between mb-1">
                         <Text className="text-sm text-secondary-dark">{item.trigger}</Text>
                         {item.count > 0 && (

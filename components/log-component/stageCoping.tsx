@@ -34,7 +34,7 @@ const StageCoping = ({ selected, onUpdate }: StageCopingProps) => {
 
     return (
         <View>
-            <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[10%] pl-[5%]">How often have you used these to cope?</Text>
+            <Text className="text-[18px] font-bold text-secondary-dark mb-[5%] pt-[3%] pl-[5%]">How often have you used these to cope?</Text>
             <ScrollView showsVerticalScrollIndicator={true} className="overflow-hidden h-[70%]">
             {copingStrategies.map((strategy) => (
                 <DropdownCard
