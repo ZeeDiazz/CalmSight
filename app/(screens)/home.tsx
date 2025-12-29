@@ -12,7 +12,7 @@ import {localCheckInService} from "@/utils/localCheckInService";
 import { useAuth } from "@/utils/AuthContext";
 
 export default function Home() {
-    const { hasCompletedOnboarding, isLoggedIn, isLoading: authLoading } = useAuth();
+    const { hasCompletedOnboarding, isLoggedIn} = useAuth();
 
     // Health service hook
     const { service, status, isRealData } = useHealthService();
@@ -69,8 +69,23 @@ export default function Home() {
             } else {
                 // No check-ins at all
                 console.log('No check-ins found');
-                setStressResult(null);
                 setLastCheckInDate(null);
+
+                // Check if we have any health data to display
+                const hasHealthData = dailyHealth.dataCompleteness !== 'minimal' ||
+                    dailyHealth.sleep !== null ||
+                    dailyHealth.heartRate !== null ||
+                    dailyHealth.hrv !== null ||
+                    dailyHealth.activity !== null;
+
+                if (hasHealthData) {
+                    // Calculate objective-only stress result from health data
+                    console.log('Calculating objective stress from health data only...');
+                    const objectiveResult = StressCalculator.calculateObjectiveOnly(dailyHealth);
+                    setStressResult(objectiveResult);
+                } else {
+                    setStressResult(null);
+                }
             }
         } catch (error) {
             console.error('Error loading health data:', error);
@@ -196,8 +211,8 @@ export default function Home() {
     ] : [
         { value: '--', label: 'WORRY TIME', textColor: 'text-[#7B9BA8]' },
         { value: '--', label: 'THREAT MONITORING', textColor: 'text-[#7B9BA8]' },
-        { value: '--', label: 'SLEEP', textColor: 'text-[#7B9BA8]' },
-        { value: '--', label: 'HRV', textColor: 'text-[#7B9BA8]' },
+        { value: getSleepDisplay(), label: 'SLEEP', textColor: 'text-[#7B9BA8]' },
+        { value: getHrvDisplay(), label: 'HRV', textColor: 'text-[#7B9BA8]' },
         { value: '--', label: 'STRESS TYPE', textColor: 'text-[#7B9BA8]' },
         { value: '--', label: 'BURNOUT RISK', textColor: 'text-[#7B9BA8]' },
     ];
@@ -217,7 +232,7 @@ export default function Home() {
                 className="flex-1 px-4"
                 showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 45 }}>
                 {/*Stress score*/}
-                {stressResult && (
+                {stressResult  && (
                     <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9]">
                         <Text className="text-[18px] font-semibold text-secondary-dark mb-4">
                             Stress Score
