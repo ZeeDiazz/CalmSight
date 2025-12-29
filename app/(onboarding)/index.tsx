@@ -45,12 +45,12 @@ const Index = () => {
                 <View className="flex-row items-center gap-2">
                     <Text className="text-xl">⏳</Text>
                     <Text className="text-sm text-secondary opacity-80">
-                        2 minutes to setup
+                        1.5 minutes to setup
                     </Text>
                 </View>
                 <TouchableOpacity
                     onPress={handleSkip}
-                    className="px-3 py-2 rounded-lg"
+                    className="py-2 rounded-lg"
                 >
                     <Text className="text-sm font-medium text-secondary opacity-80 active:text-secondary-dark">Skip
                         intro</Text>
