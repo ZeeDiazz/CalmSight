@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import React, {useEffect, useState} from "react";
 import HorizontalSelector from "@/components/horizontalSelector";
 import {useHealthService} from "@/hooks/useHealthService";
+import {DemoHealthConnectWrite} from "@/components/demoHealthConnectWrite";
 
 const Setup = () => {
     const router = useRouter();
@@ -83,6 +84,7 @@ const Setup = () => {
                     <Text className="text-secondary-dark text-base">Apple Health/ Google Fit</Text>
                     <ToggleSwitch value={health} onToggle={handleHealthToggle} />
                 </View>
+                {health && <DemoHealthConnectWrite />}
 
                 <View className="flex-row justify-between items-center py-4 border-b border-[#D9D9D9]">
                     <Text className="text-secondary-dark text-base">Calender Access</Text>
