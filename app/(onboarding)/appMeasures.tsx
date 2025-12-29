@@ -51,7 +51,7 @@ const AppMeasures = () => {
     ];
 
     return (
-        <>
+        <View className="flex-1">
             <View className="flex-1 bg-background">
                 <View className="flex-row justify-between items-center px-[3%] pt-[10%] mt-4 mb-4">
                     <Text className="justify-center text-sm font-medium text-background opacity-80">
@@ -172,7 +172,7 @@ const AppMeasures = () => {
                     <Text className="text-center text-[15px] text-white">Continue</Text>
                 </TouchableOpacity>
             </View>
-        </>
+        </View>
     );
 };
 
