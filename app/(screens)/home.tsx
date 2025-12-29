@@ -9,11 +9,10 @@ import React, {useCallback, useState} from "react";
 import {StressCalculation} from "@/interfaces/StressTypesProps";
 import {getCheckInService} from "@/hooks/useCheckInService";
 import {localCheckInService} from "@/utils/localCheckInService";
+import { useAuth } from "@/utils/AuthContext";
 
-export default function Index() {
-    // TODO: Check if user is logged in and has completed onboarding
-    const hasCompletedOnboarding = true;
-    const isLoggedIn = true;
+export default function Home() {
+    const { hasCompletedOnboarding, isLoggedIn, isLoading: authLoading } = useAuth();
 
     // Health service hook
     const { service, status, isRealData } = useHealthService();

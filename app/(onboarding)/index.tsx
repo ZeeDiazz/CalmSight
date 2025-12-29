@@ -2,7 +2,7 @@ import {View, Text, TouchableOpacity} from "react-native";
 import { useRouter } from "expo-router";
 import React from "react";
 
-const UnderstandingStress = () => {
+const Index = () => {
     const router = useRouter();
 
     const handleRoute= ()=> {
@@ -51,4 +51,4 @@ const UnderstandingStress = () => {
     );
 };
 
-export default UnderstandingStress;
+export default Index;

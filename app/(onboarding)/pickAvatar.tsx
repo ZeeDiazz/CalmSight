@@ -1,11 +1,12 @@
 import {View, Text, TouchableOpacity, Image} from "react-native";
 import {useRouter} from "expo-router";
 import React, {useState} from "react";
+import {useAuth} from "@/utils/AuthContext";
 
 const PickAvatar = () => {
     const router = useRouter();
+    const { setOnboardingComplete } = useAuth();
     const [selectedAvatar, setSelectedAvatar] = useState<number | null>(null);
-
 
     const avatars = [
         {id: 1, source: require('@/assets/images/avatar1.png')},
@@ -13,9 +14,11 @@ const PickAvatar = () => {
         /*TODO: Add more icons*/
     ];
 
-    const handleRoute = () => {
+    const handleRoute = async () => {
+        // Save that onboarding is complete
+        await setOnboardingComplete(true);
         // TODO: Save selected avatar
-        router.replace("/(screens)");
+        router.replace("/(screens)/home");
     };
 
     return (

@@ -1,16 +1,19 @@
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useAuth } from "@/utils/AuthContext";
 
 const Login = () => {
     const router = useRouter();
+    const { setLoggedIn } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const handleLogin = () => {
-        // TODO: Implement login logic
+    const handleLogin = async () => {
+        // Mock login - just set logged in state
+        await setLoggedIn(true);
         router.push("/(onboarding)/pickAvatar");
     };
 
@@ -79,10 +82,9 @@ const Login = () => {
                     <Text className="text-center text-[15px] text-white font-semibold">Login</Text>
                 </TouchableOpacity>
 
-                {/* Sign up link */}
                 <TouchableOpacity className="mt-4">
                     <Text className="text-sm text-secondary">
-                        Don't have an account? <Text className="text-primary font-semibold">Sign up</Text>
+                        Don&#39;t have an account? <Text className="text-primary font-semibold">Sign up</Text>
                     </Text>
                 </TouchableOpacity>
             </View>
