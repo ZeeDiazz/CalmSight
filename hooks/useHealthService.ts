@@ -18,7 +18,7 @@ if (Platform.OS === 'android') {
     console.log('Not Android, skipping Health Connect module load');
 }
 
-type HealthServiceStatus = 'loading' | 'available' | 'unavailable' | 'mock';
+type HealthServiceStatus = 'loading' | 'available' | 'unavailable' | 'mock' | 'none';
 
 interface UseHealthServiceResult {
     service: IHealthDataService;
@@ -31,11 +31,53 @@ interface UseHealthServiceResult {
     error: string | null;
 }
 
+// Empty health service for Android without permissions
+const createEmptyHealthService = (): IHealthDataService => ({
+    isAvailable: async () => false,
+    requestPermissions: async () => false,
+    getPermissionStatus: async () => ({
+        sleep: 'denied',
+        heartRate: 'denied',
+        hrv: 'denied',
+        steps: 'denied',
+        activity: 'denied',
+    }),
+    getLatestHealthData: async () => createEmptyHealthData(),
+    getHealthDataForDate: async (date: string) => createEmptyHealthData(date),
+    getHealthDataRange: async (startDate: string, endDate: string) => {
+        const data: HealthData[] = [];
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const dateStr = d.toISOString().split('T')[0];
+            data.push(createEmptyHealthData(dateStr));
+        }
+        return data;
+    },
+    getLatestSleep: async () => null,
+    getLatestHeartRate: async () => null,
+    getLatestHrv: async () => null,
+    getTodayActivity: async () => null
+});
+
+const createEmptyHealthData = (date?: string): HealthData => ({
+    date: date || new Date().toISOString().split('T')[0],
+    sleep: null,
+    heartRate: null,
+    hrv: null,
+    activity: null,
+    sources: [],
+    lastUpdated: new Date().toISOString(),
+    dataCompleteness: 'minimal',
+});
+
 export const useHealthService = (): UseHealthServiceResult => {
     const [status, setStatus] = useState<HealthServiceStatus>('loading');
     const [permissionsGranted, setPermissionsGranted] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [activeService, setActiveService] = useState<IHealthDataService>(mockHealthDataService);
+    const [activeService, setActiveService] = useState<IHealthDataService>(
+        Platform.OS === 'android' ? createEmptyHealthService() : mockHealthDataService
+    );
 
     useEffect(() => {
         initializeHealthService();
@@ -44,19 +86,21 @@ export const useHealthService = (): UseHealthServiceResult => {
     const initializeHealthService = async () => {
         setError(null);
 
-        // Non-Android platforms always use mock, TODO: change logic after HealthKit Implementation
+        // Non-Android platforms use mock data (for iOS demo)
         if (Platform.OS !== 'android') {
             setActiveService(mockHealthDataService);
             setStatus('mock');
             setPermissionsGranted(true); // Mock always "has permission"
+            console.log('Health Service: Using mock data for iOS');
             return;
         }
 
         // Android without Health Connect service loaded
         if (!androidHealthDataService) {
-            console.log('Health Service: Health Connect module not loaded');
+            console.log('Health Service: Health Connect module not loaded, using empty health service');
+            setActiveService(createEmptyHealthService());
             setPermissionsGranted(false);
-            setStatus('unavailable');
+            setStatus('none');
             return;
         }
 
@@ -65,10 +109,11 @@ export const useHealthService = (): UseHealthServiceResult => {
             console.log('Health Connect isAvailable():', available);
 
             if (!available) {
-                console.log('Health Service: Health Connect not available on device');
+                console.log('Health Service: Health Connect not available on device, using empty health service');
+                setActiveService(createEmptyHealthService());
                 setPermissionsGranted(false);
                 setError('Health Connect is not installed on this device');
-                setStatus('unavailable');
+                setStatus('none');
                 return;
             }
 
@@ -80,17 +125,18 @@ export const useHealthService = (): UseHealthServiceResult => {
                 setPermissionsGranted(true);  // This enables isRealData
                 console.log('Health Service: Permissions granted, switched to Health Connect');
             } else {
-                setError('Some health permissions were denied');
+                setActiveService(createEmptyHealthService());
+                setError('Health permissions were denied - stress scores will be based on check-ins only');
                 setPermissionsGranted(false);
+                setStatus('none');
+                console.log('Health Service: Permissions denied, using empty health service');
             }
 
-            console.log('Health Service: Health Connect available, awaiting permissions');
-
         } catch (err) {
-            setActiveService(mockHealthDataService);
+            setActiveService(createEmptyHealthService());
             setPermissionsGranted(false);
             setError('Failed to initialize Health Connect');
-            setStatus('unavailable');
+            setStatus('none');
             console.error('Health Service: Error during initialization', err);
         }
     };
@@ -110,9 +156,31 @@ export const useHealthService = (): UseHealthServiceResult => {
         setError(null);
 
         // Mock service always returns true
-        if (status === 'mock' || status === 'unavailable') {
+        if (status === 'mock') {
             setPermissionsGranted(true);
             return true;
+        }
+        if (status === 'none' && androidHealthDataService) {
+            try {
+                const granted = await androidHealthDataService.requestPermissions();
+
+                if (granted) {
+                    setActiveService(androidHealthDataService);
+                    setPermissionsGranted(true);
+                    setStatus('available');
+                    console.log('Health Service: Permissions granted, switched to Health Connect');
+                    return true;
+                } else {
+                    setError('Some health permissions were denied');
+                    setPermissionsGranted(false);
+                    return false;
+                }
+            } catch (error) {
+                setPermissionsGranted(false);
+                setError('Failed to request health permissions');
+                console.error('Health Service: Error requesting permissions', error);
+                return false;
+            }
         }
 
         if (!androidHealthDataService || Platform.OS !== 'android') {
@@ -125,6 +193,7 @@ export const useHealthService = (): UseHealthServiceResult => {
             if (granted) {
                 setActiveService(androidHealthDataService);
                 setPermissionsGranted(true);
+                setStatus('available');
                 console.log('Health Service: Permissions granted, switched to Health Connect');
             } else {
                 setError('Some health permissions were denied');
@@ -145,7 +214,7 @@ export const useHealthService = (): UseHealthServiceResult => {
             return await activeService.getLatestHealthData();
         } catch (err) {
             console.error('Health Service: Error getting health data', err);
-            return await mockHealthDataService.getLatestHealthData();
+            return createEmptyHealthData();
         }
     }, [activeService]);
 
@@ -177,7 +246,7 @@ export const getHealthService = async (): Promise<{
 }> => {
     if (Platform.OS !== 'android' || !androidHealthDataService) {
         return {
-            service: mockHealthDataService,
+            service: Platform.OS === 'android' ? createEmptyHealthService() : mockHealthDataService,
             isRealData: false,
         };
     }
@@ -202,7 +271,7 @@ export const getHealthService = async (): Promise<{
     }
 
     return {
-        service: mockHealthDataService,
+        service: createEmptyHealthService(),
         isRealData: false,
     };
 };
