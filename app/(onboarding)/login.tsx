@@ -53,7 +53,7 @@ const Login = () => {
         // Navigate to sign up page
     };
 
-    const isFormValid = email !== "" && password !== "" && validateEmail(email);
+    let isFormValid = email !== "" && password !== "" && validateEmail(email);
 
     const icons = {
         eye: require('@/assets/icons/eye.png'),
@@ -221,7 +221,7 @@ const Login = () => {
                     <TouchableOpacity
                         onPress={handleLogin}
                         disabled={!isFormValid}
-                        className="rounded-2xl p-5 items-center justify-center bg-primary shadow-lg"
+                        className={`rounded-2xl p-5 items-center justify-center  shadow-lg ${!isFormValid ? 'bg-gray-300' : 'bg-primary'}`}
                         style={{
                             shadowColor: '#2FB5B5',
                             shadowOffset: {width: 0, height: 4},
