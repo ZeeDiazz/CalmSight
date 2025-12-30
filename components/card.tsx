@@ -11,7 +11,7 @@ interface CardProps {
 const Card = ({ value, label, textColor}: CardProps) => {
     return (
         <View className="flex-1">
-            <TouchableOpacity className="bg-background-dark rounded-xl p-5 items-center justify-center min-h-[100px] border border-[#D9D9D9]">
+            <TouchableOpacity className="bg-white rounded-xl p-5 items-center justify-center min-h-[100px] border border-[#D9D9D9]">
                 <Text className={`text-[24px] font-semibold ${textColor} mb-2`}>
                     {value}
                 </Text>

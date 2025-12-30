@@ -1,7 +1,7 @@
 import Card from "@/components/card";
-import {ScrollView, Text, View} from "react-native";
+import {ScrollView, Text, TouchableOpacity, View} from "react-native";
 import PatternAlertCard from "@/components/patternAlertCard";
-import {useFocusEffect, Redirect} from "expo-router";
+import {useFocusEffect, Redirect, useRouter} from "expo-router";
 import {HealthData} from '@/interfaces/Types';
 import {StressCalculator} from "@/utils/StressCalculator";
 import {useHealthService} from "@/hooks/useHealthService";
@@ -10,8 +10,10 @@ import {StressCalculation} from "@/interfaces/StressTypesProps";
 import {getCheckInService} from "@/hooks/useCheckInService";
 import {localCheckInService} from "@/utils/localCheckInService";
 import { useAuth } from "@/utils/AuthContext";
+import Svg, { Circle } from 'react-native-svg';
 
 export default function Home() {
+    const router = useRouter();
     const { hasCompletedOnboarding, isLoggedIn} = useAuth();
 
     // Health service hook
@@ -113,6 +115,12 @@ export default function Home() {
         if (riskLevel === 'High') return 'High Stress';
         if (riskLevel === 'Moderate') return 'Moderate Stress';
         return 'Low Stress';
+    };
+
+    const getStressLevelColor = (riskLevel: string) => {
+        if (riskLevel === 'High') return '#D4A574';
+        if (riskLevel === 'Moderate') return '#7B9BA8';
+        return '#5FA8A8';
     };
 
     const getWorryTimeLabel = (score: number) => {
@@ -217,9 +225,13 @@ export default function Home() {
         { value: '--', label: 'BURNOUT RISK', textColor: 'text-[#7B9BA8]' },
     ];
 
+    const handleCheckIn = () => {
+        router.push('/(screens)/log');
+    };
+
     return (
         <View className="flex-1 bg-background pt-12">
-            <View className="mt-4 mb-5 px-4">
+            <View className="mt-4 mb-5 px-[3%]">
                 <Text className="text-sm text-secondary mb-1">
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </Text>
@@ -229,23 +241,49 @@ export default function Home() {
             </View>
 
             <ScrollView
-                className="flex-1 px-4"
-                showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 45 }}>
+                className="flex-1 px-[3%]"
+                showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 {/*Stress score*/}
-                {stressResult  && (
-                    <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9]">
+                {stressResult && (
+                    <View className={`bg-white rounded-xl p-5 mb-4 border-2 border-[${getStressLevelColor(stressResult.riskLevel)}]`}>
                         <Text className="text-[18px] font-semibold text-secondary-dark mb-4">
                             Stress Score
                         </Text>
                         <View className="flex-row items-center">
-                            <View className="w-24 h-24 rounded-full border-8 border-primary items-center justify-center">
-                                <Text className="text-2xl font-bold text-primary">
-                                    {stressResult.stressScore}
-                                </Text>
+                            <View className="items-center justify-center" style={{ width: 112, height: 112 }}>
+                                <Svg width={112} height={112} style={{ position: 'absolute' }}>
+                                    <Circle
+                                        cx="56"
+                                        cy="56"
+                                        r="48"
+                                        stroke="#E5E7EB"
+                                        strokeWidth="8"
+                                        fill="none"
+                                    />
+                                    {/* Progress Circle */}
+                                    <Circle
+                                        cx="56"
+                                        cy="56"
+                                        r="48"
+                                        stroke={getStressLevelColor(stressResult.riskLevel)}
+                                        strokeWidth="8"
+                                        fill="none"
+                                        strokeDasharray={`${(stressResult.stressScore / 100) * 301.59} 301.59`}
+                                        strokeLinecap="round"
+                                    />
+                                </Svg>
+                                <View style={{ position: 'absolute', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text
+                                        className="text-3xl font-black"
+                                        style={{ color: getStressLevelColor(stressResult.riskLevel) }}
+                                    >
+                                        {stressResult.stressScore}
+                                    </Text>
+                                </View>
                             </View>
 
                             <View className="flex-1 ml-5">
-                                <Text className="text-2xl font-semibold text-primary mb-1">
+                                <Text className={`text-2xl font-semibold mb-1 text-[${getStressLevelColor(stressResult.riskLevel)}]`}>
                                     {getStressLevelText(stressResult.riskLevel)}
                                 </Text>
                                 <Text className="text-sm text-secondary leading-5">
@@ -266,21 +304,43 @@ export default function Home() {
                         </View>
                     </View>
                 )}
-
                 {isLoading && (
-                    <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9] items-center justify-center">
-                        <Text className="text-secondary">Loading...</Text>
+                    <View className="bg-white rounded-xl p-5 mb-4 border border-[#D9D9D9] items-center justify-center">
+                        <Text className="text-secondary">Loading your data...</Text>
                     </View>
                 )}
 
                 {!isLoading && !stressResult && (
-                    <View className="bg-background-dark rounded-xl p-5 mb-4 border border-[#D9D9D9]">
+                    <View className="bg-white rounded-xl p-5 mb-4 border border-[#D9D9D9]"
+                          style={{
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 8,
+                              elevation: 2,
+                          }}
+                    >
                         <Text className="text-[18px] font-semibold text-secondary-dark mb-2">
-                            Stress Score
+                            No Stress Score Yet
                         </Text>
                         <Text className="text-sm text-secondary">
-                            Complete your first check-in to see your stress score.
+                            Complete your first check-in or connect to Health Connect to see your personalized stress score and insights.
                         </Text>
+                        <TouchableOpacity
+                            onPress={handleCheckIn}
+                            className="bg-primary rounded-xl p-4"
+                            style={{
+                                shadowColor: '#2FB5B5',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 8,
+                                elevation: 4,
+                            }}
+                        >
+                            <Text className="text-white font-bold text-center">
+                                Start Check-in
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 )}
 
@@ -303,7 +363,15 @@ export default function Home() {
                 </View>
 
                 {healthData && (
-                    <View className="bg-background-dark rounded-xl p-4 mb-4 border border-[#D9D9D9]">
+                    <View className="bg-white rounded-xl p-4 mb-4 border-2 border-[#D9D9D9]"
+                          style={{
+                              shadowColor: '#000',
+                              shadowOffset: { width: 0, height: 2 },
+                              shadowOpacity: 0.05,
+                              shadowRadius: 8,
+                              elevation: 2,
+                          }}
+                    >
                         <View className="flex-row justify-between items-center mb-3">
                             <Text className="text-sm font-semibold text-secondary-dark">
                                 Health Metrics
@@ -376,9 +444,13 @@ export default function Home() {
                             Today&#39;s Insights
                         </Text>
                         {stressResult.insights.slice(0, 3).map((insight, index) => (
-                            <View key={index} className="flex-row mb-2">
-                                <Text className="text-primary mr-2">-</Text>
-                                <Text className="text-sm text-secondary-dark flex-1">{insight}</Text>
+                            <View key={index} className="flex-row mb-3">
+                                <View
+                                    className="w-2 h-2 rounded-full mt-1.5 mr-3 bg-primary"
+                                />
+                                <Text className="text-sm text-secondary-dark flex-1 leading-relaxed">
+                                    {insight}
+                                </Text>
                             </View>
                         ))}
                     </View>

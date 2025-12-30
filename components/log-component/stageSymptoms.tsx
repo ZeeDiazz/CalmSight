@@ -75,7 +75,7 @@ const StageSymptoms = ({selected, onUpdate}: StageSymptomsProps) => {
                         placeholder="I have been..."
                         placeholderTextColor="#9CA3AF"
                         multiline
-                        className="bg-background-dark rounded-xl border border-[#D9D9D9] p-4 min-h-[100px] text-secondary-dark text-[14px]"
+                        className="bg-white rounded-xl border border-[#D9D9D9] p-4 min-h-[100px] text-secondary-dark text-[14px]"
                         textAlignVertical="top"
                     />
                 </View>
