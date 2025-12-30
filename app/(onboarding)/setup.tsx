@@ -120,11 +120,11 @@ const Setup = () => {
                     </View>
 
                     <View className="flex-row items-center mb-6">
-                        <View className="flex-1 h-[2px] bg-secondary" />
+                        <View className="flex-1 h-[1px] bg-secondary" />
                         <Text className="px-4 text-[13px] text-secondary">
                             or customize manually
                         </Text>
-                        <View className="flex-1 h-[2px] bg-secondary" />
+                        <View className="flex-1 h-[1px] bg-secondary" />
                     </View>
 
                     <View className="gap-4 mb-6">
@@ -276,7 +276,7 @@ const Setup = () => {
                         elevation: 8,
                     }}
                 >
-                    <Text className="text-center text-[15px] text-white">Continue</Text>
+                    <Text className="text-center text-[15px] text-white">Complete Setup</Text>
                 </TouchableOpacity>
             </View>
         </View>
