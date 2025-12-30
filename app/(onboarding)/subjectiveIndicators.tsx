@@ -169,10 +169,18 @@ const SubjectiveIndicators = () => {
             </ScrollView>
 
 
-            <View className="absolute bottom-[5%] left-0 right-0 items-center">
+            <View className="absolute bottom-12 left-0 right-0 px-[3%]">
                 <TouchableOpacity
                     onPress={handleRoute}
-                    className="rounded-xl p-5 items-center justify-center border border-[#D9D9D9] w-[48%] bg-primary">
+                    className="rounded-2xl p-5 items-center justify-center bg-primary shadow-lg"
+                    style={{
+                        shadowColor: '#2FB5B5',
+                        shadowOffset: {width: 0, height: 4},
+                        shadowOpacity: 0.3,
+                        shadowRadius: 12,
+                        elevation: 8,
+                    }}
+                >
                     <Text className="text-center text-[15px] text-white">Continue</Text>
                 </TouchableOpacity>
             </View>
