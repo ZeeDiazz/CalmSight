@@ -458,7 +458,7 @@ const Analysis = () => {
                     <WeeklyStressChart data={chartData} />
                 </View>
 
-                <View className="bg-background-dark rounded-xl p-4 mb-4 border border-[#D9D9D9]">
+                <View className="bg-white rounded-xl p-4 mb-4 border border-[#D9D9D9]">
                     <View className="flex-row justify-between">
                         <View className="items-center flex-1">
                             <Text className="text-xs text-secondary mb-1">Avg Stress</Text>
@@ -519,7 +519,7 @@ const Analysis = () => {
                     <Text className="text-xl font-bold text-secondary-dark mb-4">
                         MCT Analysis
                     </Text>
-                    <View className="bg-background-dark rounded-xl p-4 mb-3 border border-[#D9D9D9]">
+                    <View className="bg-white rounded-xl p-4 mb-3 border border-[#D9D9D9]">
                         <View className="flex-row justify-between items-center mb-3">
                             <Text className="text-base font-semibold text-secondary-dark">
                                 Problem A vs B (Weekly Avg)

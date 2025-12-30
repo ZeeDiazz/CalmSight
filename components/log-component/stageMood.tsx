@@ -38,7 +38,7 @@ const StageMood = ({checkInType, selected, onUpdate}:MoodProp) => {
                             className="w-[48%]">
                             <View
                                 className={`rounded-2xl items-center justify-center min-h-[150px] border ${localSelected === mood.id ?
-                                        'bg-primary/10 border-primary' : 'bg-background-dark border-[#D9D9D9]'}`}>
+                                        'bg-primary/10 border-primary' : 'bg-white border-[#D9D9D9]'}`}>
                                 <Text className="text-[60px] mb-4">{mood.emoji}</Text>
                                 <Text
                                     className={`text-[14px] font-semibold ${localSelected === mood.id ?

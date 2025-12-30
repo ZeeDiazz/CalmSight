@@ -70,7 +70,7 @@ export const StressComparisonCard = ({thisWeek = 0, lastWeek = 0}: Partial<Stres
     const isImprovement = change > 0;
 
     return (
-        <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+        <View className="bg-white rounded-xl p-5 border border-[#D9D9D9] mb-4">
             <Text className="text-base font-semibold text-secondary-dark mb-4">
                 Average Stress Level
             </Text>
@@ -115,7 +115,7 @@ export const MostStressfulDayCard = ({day = '--', averageStress = 0, description
     };
 
     return (
-        <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+        <View className="bg-white rounded-xl p-5 border border-[#D9D9D9] mb-4">
             <Text className="text-base font-semibold text-secondary-dark mb-4">
                 Most Stressful Day
             </Text>
@@ -156,7 +156,7 @@ export const SleepImpactCard = ({data = []}: Partial<SleepImpactCardProps>) => {
 
     if (data.length === 0) {
         return (
-            <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+            <View className="bg-white rounded-xl p-5 border border-[#D9D9D9] mb-4">
                 <Text className="text-base font-semibold text-secondary-dark mb-4">
                     Sleep Impact on Stress
                 </Text>
@@ -173,7 +173,7 @@ export const SleepImpactCard = ({data = []}: Partial<SleepImpactCardProps>) => {
         );
     }
     return (
-        <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+        <View className="bg-white rounded-xl p-5 border border-[#D9D9D9] mb-4">
             <Text className="text-base font-semibold text-secondary-dark mb-4">
                 Sleep Impact on Stress
             </Text>
@@ -201,7 +201,7 @@ export const SleepImpactCard = ({data = []}: Partial<SleepImpactCardProps>) => {
 export const StressTriggersCard = ({triggers = [], maxCount, period = 'this week'}: Partial<StressTriggersCardProps>) => {
     if (triggers.length === 0) {
         return (
-            <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+            <View className="bg-white rounded-xl p-5 border border-[#D9D9D9] mb-4">
                 <Text className="text-base font-semibold text-secondary-dark mb-4">
                     Top Stress Triggers
                 </Text>
@@ -221,7 +221,7 @@ export const StressTriggersCard = ({triggers = [], maxCount, period = 'this week
     const actualMaxCount = maxCount || Math.max(...triggers.map(t => t.count), 1);
 
     return (
-        <View className="bg-background-dark rounded-xl p-5 border border-[#D9D9D9] mb-4">
+        <View className="bg-white rounded-xl p-5 border border-[#D9D9D9] mb-4">
             <Text className="text-base font-semibold text-secondary-dark mb-4">
                 Top Stress Triggers
             </Text>

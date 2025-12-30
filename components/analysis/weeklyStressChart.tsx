@@ -23,7 +23,7 @@ const WeeklyStressChart = ({data}: WeeklyStressChartProps) => {
     };
 
     return (
-        <View className="bg-background-dark rounded-xl p-4 border border-[#D9D9D9]">
+        <View className="bg-white rounded-xl p-4 border border-[#D9D9D9]">
             <Text className="text-base font-semibold text-secondary-dark mb-4">
                 Weekly Stress Trends
             </Text>
