@@ -10,6 +10,7 @@ import {StressCalculation} from "@/interfaces/StressTypesProps";
 import {getCheckInService} from "@/hooks/useCheckInService";
 import {localCheckInService} from "@/utils/localCheckInService";
 import { useAuth } from "@/utils/AuthContext";
+import Svg, { Circle } from 'react-native-svg';
 
 export default function Home() {
     const router = useRouter();
@@ -243,24 +244,42 @@ export default function Home() {
                 className="flex-1 px-[3%]"
                 showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 {/*Stress score*/}
-                {stressResult  && (
-                    <View className={`bg-white rounded-xl p-5 mb-4 border-2 border-[${getStressLevelColor(stressResult.riskLevel)}]`}
-                          style={{
-                              shadowColor: '#000',
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.1,
-                              shadowRadius: 8,
-                              elevation: 4,
-                          }}
-                    >
+                {stressResult && (
+                    <View className={`bg-white rounded-xl p-5 mb-4 border-2 border-[${getStressLevelColor(stressResult.riskLevel)}]`}>
                         <Text className="text-[18px] font-semibold text-secondary-dark mb-4">
                             Stress Score
                         </Text>
                         <View className="flex-row items-center">
-                            <View className={`w-28 h-28 rounded-full border-8 border-[${getStressLevelColor(stressResult.riskLevel)}] items-center justify-center`}>
-                                <Text className={`text-2xl font-bold text-[${getStressLevelColor(stressResult.riskLevel)}]`}>
-                                    {stressResult.stressScore}
-                                </Text>
+                            <View className="items-center justify-center" style={{ width: 112, height: 112 }}>
+                                <Svg width={112} height={112} style={{ position: 'absolute' }}>
+                                    <Circle
+                                        cx="56"
+                                        cy="56"
+                                        r="48"
+                                        stroke="#E5E7EB"
+                                        strokeWidth="8"
+                                        fill="none"
+                                    />
+                                    {/* Progress Circle */}
+                                    <Circle
+                                        cx="56"
+                                        cy="56"
+                                        r="48"
+                                        stroke={getStressLevelColor(stressResult.riskLevel)}
+                                        strokeWidth="8"
+                                        fill="none"
+                                        strokeDasharray={`${(stressResult.stressScore / 100) * 301.59} 301.59`}
+                                        strokeLinecap="round"
+                                    />
+                                </Svg>
+                                <View style={{ position: 'absolute', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text
+                                        className="text-3xl font-black"
+                                        style={{ color: getStressLevelColor(stressResult.riskLevel) }}
+                                    >
+                                        {stressResult.stressScore}
+                                    </Text>
+                                </View>
                             </View>
 
                             <View className="flex-1 ml-5">
@@ -285,7 +304,6 @@ export default function Home() {
                         </View>
                     </View>
                 )}
-
                 {isLoading && (
                     <View className="bg-white rounded-xl p-5 mb-4 border border-[#D9D9D9] items-center justify-center">
                         <Text className="text-secondary">Loading your data...</Text>
